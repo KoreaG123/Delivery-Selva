@@ -257,7 +257,6 @@ const fabTotal     = $('fabTotal');
 const clearCartBtn = $('clearCartBtn');
 const sendOrderBtn = $('sendOrderBtn');
 const locBtn       = $('locBtn');
-const locResult    = $('locResult');
 const catsTrack    = $('catsTrack');
 const toast        = $('toast');
 const heroVideoWrap= $('heroVideoWrap');
@@ -362,10 +361,23 @@ function changeQty(id, delta) {
 }
 
 function clearCart() {
-  cart = [];
+  cart    = [];
   locData = null;
-  locResult.textContent = '';
-  locResult.className = 'loc-result';
+
+  // Reset GPS button
+  const locBtnEl   = $('locBtn');
+  const locBtnText = $('locBtnText');
+  const locStatus  = $('locStatus');
+  if (locBtnEl)   { locBtnEl.classList.remove('loading','success'); }
+  if (locBtnText) { locBtnText.textContent = 'Usar mi ubicación GPS'; }
+  const icoEl = locBtnEl ? locBtnEl.querySelector('i') : null;
+  if (icoEl)      { icoEl.className = 'fas fa-satellite-dish'; }
+  if (locStatus)  { locStatus.className = 'loc-status'; locStatus.innerHTML = ''; }
+
+  // Reset address fields
+  if ($('clientAddress')) $('clientAddress').value = '';
+  if ($('clientRef'))     $('clientRef').value     = '';
+
   updateCartUI();
   showToast('🗑️ Carrito vaciado');
 }
@@ -460,55 +472,108 @@ function closeCart() {
 }
 
 /* ══════════════════════════════════════════
-   GEOLOCATION
+   GEOLOCATION — flujo amigable
 ══════════════════════════════════════════ */
 function getLocation() {
+  const locStatus  = $('locStatus');
+  const locBtnText = $('locBtnText');
+
+  // Sin soporte
   if (!navigator.geolocation) {
-    locResult.textContent = '❌ Tu navegador no soporta geolocalización.';
-    locResult.className   = 'loc-result error';
+    showLocStatus('warn',
+      '<strong>GPS no disponible</strong>' +
+      'Tu navegador no soporta geolocalización. Escribe tu dirección abajo.');
     return;
   }
 
-  locBtn.innerHTML    = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación…';
-  locBtn.disabled     = true;
-  locResult.textContent = '';
-  locResult.className = 'loc-result';
+  // Estado: cargando
+  locBtn.classList.add('loading');
+  locBtnText.textContent = 'Detectando ubicación…';
+  locBtn.querySelector('i').className = 'fas fa-spinner fa-spin';
+  hideLocStatus();
 
   navigator.geolocation.getCurrentPosition(
+    // ── ÉXITO ──
     pos => {
       const { latitude: lat, longitude: lng } = pos.coords;
       const link = `https://www.google.com/maps?q=${lat},${lng}`;
       locData = { lat, lng, link };
 
-      locBtn.innerHTML = '<i class="fas fa-circle-check"></i> Ubicación compartida ✓';
-      locBtn.disabled  = false;
-      locResult.innerHTML = `📍 <a href="${link}" target="_blank" style="color:var(--green);text-decoration:underline">Ver en Google Maps</a>`;
+      locBtn.classList.remove('loading');
+      locBtn.classList.add('success');
+      locBtn.querySelector('i').className = 'fas fa-circle-check';
+      locBtnText.textContent = '✓ Ubicación GPS obtenida';
+
+      showLocStatus('ok',
+        `📍 GPS activado — <a href="${link}" target="_blank">Ver en Google Maps</a>`);
     },
+
+    // ── ERROR ──
     err => {
-      locBtn.innerHTML = '<i class="fas fa-location-dot"></i> Compartir mi ubicación';
-      locBtn.disabled  = false;
-      let msg = '❌ No se pudo obtener la ubicación.';
-      if (err.code === 1) msg = '❌ Permiso denegado. Activa la ubicación.';
-      if (err.code === 2) msg = '❌ Posición no disponible.';
-      locResult.textContent = msg;
-      locResult.className   = 'loc-result error';
+      locBtn.classList.remove('loading', 'success');
+      locBtn.querySelector('i').className = 'fas fa-satellite-dish';
+      locBtnText.textContent = 'Usar mi ubicación GPS';
+
+      let html = '';
+      if (err.code === 1) {
+        // Permiso denegado — el más común
+        html = `
+          <strong>📵 Permiso de GPS bloqueado</strong>
+          Para activarlo: abre los <b>ajustes de tu navegador</b> → Privacidad → Permisos de ubicación → actívalo para este sitio.<br>
+          <span style="opacity:.8">O simplemente escribe tu dirección en los campos de abajo.</span>`;
+      } else if (err.code === 2) {
+        html = `
+          <strong>📡 GPS no disponible ahora</strong>
+          Activa el GPS de tu celular o escribe tu dirección en los campos de abajo.`;
+      } else {
+        html = `
+          <strong>⏱ Tardó demasiado</strong>
+          El GPS no respondió. Intenta de nuevo o escribe tu dirección abajo.`;
+      }
+      showLocStatus('warn', html);
     },
-    { enableHighAccuracy: true, timeout: 10000 }
+
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
+}
+
+function showLocStatus(type, html) {
+  const el = $('locStatus');
+  el.innerHTML   = html;
+  el.className   = `loc-status ${type} visible`;
+}
+function hideLocStatus() {
+  const el = $('locStatus');
+  el.className = 'loc-status';
+  el.innerHTML = '';
 }
 
 /* ══════════════════════════════════════════
    SEND ORDER — WHATSAPP
 ══════════════════════════════════════════ */
 function sendOrder() {
-  const name  = $('clientName').value.trim();
-  const phone = $('clientPhone').value.trim();
+  const name    = $('clientName').value.trim();
+  const phone   = $('clientPhone').value.trim();
+  const address = $('clientAddress') ? $('clientAddress').value.trim() : '';
+  const ref     = $('clientRef')     ? $('clientRef').value.trim()     : '';
 
+  // Validar nombre
   if (!name) {
     $('clientName').focus();
-    showToast('⚠️ Ingresa tu nombre para continuar');
     $('clientName').style.borderColor = 'var(--amber-dk)';
-    setTimeout(() => { $('clientName').style.borderColor = ''; }, 2000);
+    setTimeout(() => { $('clientName').style.borderColor = ''; }, 2200);
+    showToast('⚠️ Ingresa tu nombre para continuar');
+    return;
+  }
+
+  // Validar que haya alguna forma de ubicación
+  const hasGps     = !!locData;
+  const hasAddress = address.length > 3;
+  if (!hasGps && !hasAddress) {
+    $('clientAddress').focus();
+    $('clientAddress').style.borderColor = 'var(--amber-dk)';
+    setTimeout(() => { $('clientAddress').style.borderColor = ''; }, 2200);
+    showToast('📍 Indica tu dirección o activa el GPS');
     return;
   }
 
@@ -523,17 +588,19 @@ function sendOrder() {
 
   const total = getTotal();
 
-  let msg  = `🌿 *PEDIDO — DELIVERY SELVA* 🌿\n\n`;
+  let msg = `🌿 *PEDIDO — DELIVERY SELVA* 🌿\n\n`;
   msg += `👤 *Cliente:* ${name}\n`;
-  if (phone) msg += `📞 *Teléfono:* ${phone}\n`;
+  if (phone)   msg += `📞 *Teléfono:* ${phone}\n`;
   msg += `\n🛒 *Productos:*\n${lines}\n\n`;
   msg += `💰 *Total: S/ ${total.toFixed(2)}*\n`;
-  if (locData) {
-    msg += `\n📍 *Ubicación:* ${locData.link}`;
-  } else {
-    msg += `\n📍 Ubicación: (no compartida)`;
-  }
-  msg += `\n\n¡Gracias por tu pedido! 🙏`;
+
+  // Ubicación: GPS primero, luego dirección escrita
+  msg += `\n📍 *Dirección de entrega:*\n`;
+  if (hasAddress)  msg += `${address}\n`;
+  if (ref)         msg += `Referencia: ${ref}\n`;
+  if (hasGps)      msg += `GPS: ${locData.link}\n`;
+
+  msg += `\n¡Gracias por tu pedido! 🙏`;
 
   const encoded = encodeURIComponent(msg);
   window.open(`https://wa.me/51920857471?text=${encoded}`, '_blank');
