@@ -1,171 +1,224 @@
 /* ============================================
    DELIVERY SELVA — app.js
-   Carrito con localStorage + WhatsApp checkout
-   + Geolocalización GPS
+   - Carrito con localStorage
+   - Controles inline en cada card (− N +)
+   - Borrar item individual ✕
+   - Vaciar todo el pedido
+   - WhatsApp checkout con geolocalización
    ============================================ */
 
-// ─── ESTADO GLOBAL ──────────────────────────
-let cart = JSON.parse(localStorage.getItem('deliverySelvaCart') || '[]');
-let userLocation = null; // { lat, lng } si el usuario acepta
+// ─── CATÁLOGO ────────────────────────────────
+// Datos de todos los productos para poder referenciarlos por id
+const CATALOG = {
+  '1':  { name: 'Guiso de Pollo',          price: 10, emoji: '🍛' },
+  '2':  { name: 'Mechado de Res',           price: 12, emoji: '🥩' },
+  '3':  { name: 'Arroz con Pollo',          price: 11, emoji: '🍚' },
+  '4':  { name: 'Chicharrón de Chancho',    price: 13, emoji: '🥓' },
+  '5':  { name: 'Pescado Frito',            price: 12, emoji: '🐟' },
+  '6':  { name: 'Tallarines Rojos',         price: 10, emoji: '🍝' },
+  '7':  { name: 'Cecina',                   price: 15, emoji: '🥩' },
+  '8':  { name: 'Tacacho con Cecina',       price: 18, emoji: '🍌' },
+  '9':  { name: 'Juane',                    price: 16, emoji: '🍃' },
+  '10': { name: 'Patarashca',               price: 20, emoji: '🐟' },
+  '11': { name: 'Ceviche',                  price: 18, emoji: '🍋' },
+  '12': { name: 'Arroz con Mariscos',       price: 22, emoji: '🦐' },
+  '13': { name: 'Jalea Mixta',              price: 25, emoji: '🐙' },
+  '14': { name: 'Chicharrón de Pescado',    price: 16, emoji: '🐠' },
+  '15': { name: 'Keke de Vainilla',         price:  6, emoji: '🍰' },
+  '16': { name: 'Torta de Chocolate',       price:  8, emoji: '🎂' },
+  '17': { name: 'Keke de Naranja',          price:  6, emoji: '🍊' },
+  '18': { name: 'Gelatina',                 price:  4, emoji: '🍮' },
+  '19': { name: 'Jugo de Papaya',           price:  5, emoji: '🥭' },
+  '20': { name: 'Jugo Surtido',             price:  5, emoji: '🍹' },
+  '21': { name: 'Jugo de Fresa con Leche',  price:  6, emoji: '🍓' },
+  '22': { name: 'Chicha Morada',            price:  5, emoji: '🫐' },
+};
+
+// ─── ESTADO ──────────────────────────────────
+let cart = loadCartFromStorage();
+let userLocation = null;
 
 // ─── INIT ────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  renderCart();
-  updateCartCount();
+  renderCartSidebar();
+  updateCartBadge();
+  restoreAllCardControls();
   initCategoryTabs();
   requestLocation();
+  document.getElementById('cartBtn').addEventListener('click', openCart);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCart(); });
 });
 
-// ─── GEOLOCALIZACIÓN ─────────────────────────
-/**
- * Solicita la ubicación del usuario de forma silenciosa.
- * Si acepta, guarda lat/lng para incluirlo en el pedido.
- */
-function requestLocation() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      userLocation = {
-        lat: pos.coords.latitude.toFixed(6),
-        lng: pos.coords.longitude.toFixed(6),
-      };
-      console.log('📍 Ubicación obtenida:', userLocation);
-    },
-    (err) => {
-      console.warn('📍 Ubicación no disponible:', err.message);
-    },
-    { timeout: 10000, maximumAge: 60000 }
-  );
+// ─── LOCALSTORE ──────────────────────────────
+function loadCartFromStorage() {
+  try {
+    return JSON.parse(localStorage.getItem('ds_cart') || '[]');
+  } catch {
+    return [];
+  }
 }
 
-// ─── CARRITO: AGREGAR ────────────────────────
-/**
- * Lee los atributos data-* del card padre del botón pulsado
- * y agrega el producto al carrito (o aumenta cantidad).
- */
-function addToCart(btn) {
-  const card  = btn.closest('.product-card');
-  const id    = card.dataset.id;
-  const name  = card.dataset.name;
-  const price = parseFloat(card.dataset.price);
-  const emoji = card.dataset.emoji;
+function saveCartToStorage() {
+  localStorage.setItem('ds_cart', JSON.stringify(cart));
+}
 
-  const existing = cart.find(item => item.id === id);
+// ─── AGREGAR AL CARRITO ──────────────────────
+function addToCart(id) {
+  id = String(id);
+  const product = CATALOG[id];
+  if (!product) return;
 
+  const existing = cart.find(i => i.id === id);
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ id, name, price, emoji, qty: 1 });
+    cart.push({ id, qty: 1 });
   }
 
-  saveCart();
-  renderCart();
-  updateCartCount();
-  showToast(`${emoji} ${name} agregado`);
-
-  // Micro-animación en el botón
-  btn.classList.add('added');
-  setTimeout(() => btn.classList.remove('added'), 400);
+  saveCartToStorage();
+  renderCartSidebar();
+  updateCartBadge();
+  updateCardControl(id);
+  showToast(`${product.emoji} ${product.name} agregado`);
 }
 
-// ─── CARRITO: CAMBIAR CANTIDAD ───────────────
+// ─── CAMBIAR CANTIDAD (desde card o sidebar) ──
 function changeQty(id, delta) {
+  id = String(id);
   const item = cart.find(i => i.id === id);
   if (!item) return;
 
   item.qty += delta;
+
   if (item.qty <= 0) {
+    // Eliminar del carrito
     cart = cart.filter(i => i.id !== id);
   }
 
-  saveCart();
-  renderCart();
-  updateCartCount();
+  saveCartToStorage();
+  renderCartSidebar();
+  updateCartBadge();
+  updateCardControl(id);
 }
 
-// ─── CARRITO: ELIMINAR ITEM ──────────────────
+// ─── ELIMINAR UN ITEM COMPLETO ────────────────
 function removeItem(id) {
+  id = String(id);
   cart = cart.filter(i => i.id !== id);
-  saveCart();
-  renderCart();
-  updateCartCount();
+  saveCartToStorage();
+  renderCartSidebar();
+  updateCartBadge();
+  updateCardControl(id);
+  const product = CATALOG[id];
+  if (product) showToast(`${product.emoji} ${product.name} eliminado`);
 }
 
-// ─── CARRITO: PERSISTENCIA ───────────────────
-function saveCart() {
-  localStorage.setItem('deliverySelvaCart', JSON.stringify(cart));
+// ─── VACIAR TODO ──────────────────────────────
+function clearCart() {
+  if (cart.length === 0) return;
+  cart = [];
+  saveCartToStorage();
+  renderCartSidebar();
+  updateCartBadge();
+  // Restaurar todos los botones + en las cards
+  Object.keys(CATALOG).forEach(id => updateCardControl(id));
+  showToast('🗑️ Pedido vaciado');
 }
 
-// ─── CARRITO: RENDER ─────────────────────────
-function renderCart() {
+// ─── CONTROL INLINE EN CARD ──────────────────
+/**
+ * Actualiza el div#ctrl-{id} de la card correspondiente.
+ * Si qty > 0 muestra − N +, si qty === 0 muestra botón +.
+ */
+function updateCardControl(id) {
+  id = String(id);
+  const container = document.getElementById(`ctrl-${id}`);
+  if (!container) return;
+
+  const item = cart.find(i => i.id === id);
+  const qty  = item ? item.qty : 0;
+
+  if (qty === 0) {
+    container.innerHTML = `<button class="add-btn" onclick="addToCart('${id}')"><i class="fas fa-plus"></i></button>`;
+  } else {
+    container.innerHTML = `
+      <div class="qty-ctrl">
+        <button class="qc-btn" onclick="changeQty('${id}', -1)">−</button>
+        <span class="qc-num">${qty}</span>
+        <button class="qc-btn" onclick="changeQty('${id}', 1)">+</button>
+      </div>`;
+  }
+}
+
+// Al cargar página, restaura controles de items que ya estaban en localStorage
+function restoreAllCardControls() {
+  cart.forEach(item => updateCardControl(item.id));
+}
+
+// ─── RENDER SIDEBAR ───────────────────────────
+function renderCartSidebar() {
   const itemsEl  = document.getElementById('cartItems');
   const emptyEl  = document.getElementById('cartEmpty');
   const footerEl = document.getElementById('cartFooter');
   const totalEl  = document.getElementById('cartTotal');
 
   if (cart.length === 0) {
-    emptyEl.style.display  = 'flex';
-    footerEl.style.display = 'none';
+    // Mostrar estado vacío
     itemsEl.innerHTML = '';
+    emptyEl.style.display = 'flex';
     itemsEl.appendChild(emptyEl);
+    footerEl.style.display = 'none';
     return;
   }
 
-  // Ocultar estado vacío, mostrar footer
-  emptyEl.style.display  = 'none';
-  footerEl.style.display = 'block';
-
   // Calcular total
-  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-  totalEl.textContent = `S/ ${total.toFixed(2)}`;
+  const total = cart.reduce((sum, i) => {
+    const p = CATALOG[i.id];
+    return sum + (p ? p.price * i.qty : 0);
+  }, 0);
 
-  // Renderizar items
+  totalEl.textContent = `S/ ${total.toFixed(2)}`;
+  emptyEl.style.display  = 'none';
+  footerEl.style.display = 'flex';
+
+  // Render items
   itemsEl.innerHTML = '';
 
   cart.forEach(item => {
+    const p = CATALOG[item.id];
+    if (!p) return;
+
+    const subtotal = (p.price * item.qty).toFixed(2);
     const el = document.createElement('div');
     el.className = 'cart-item';
     el.innerHTML = `
-      <div class="cart-item-emoji">${item.emoji}</div>
+      <div class="cart-item-emoji">${p.emoji}</div>
       <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">S/ ${(item.price * item.qty).toFixed(2)}</div>
+        <div class="cart-item-name">${p.name}</div>
+        <div class="cart-item-price">S/ ${subtotal}</div>
       </div>
       <div class="cart-item-controls">
-        <button class="qty-btn" onclick="changeQty('${item.id}', -1)" aria-label="Quitar uno">−</button>
-        <span class="qty-num">${item.qty}</span>
-        <button class="qty-btn" onclick="changeQty('${item.id}', 1)" aria-label="Agregar uno">+</button>
+        <button class="s-qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
+        <span class="s-qty-num">${item.qty}</span>
+        <button class="s-qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
+        <button class="delete-item-btn" onclick="removeItem('${item.id}')" title="Eliminar">
+          <i class="fas fa-trash-alt"></i>
+        </button>
       </div>
     `;
     itemsEl.appendChild(el);
   });
-
-  // Mostrar información de ubicación debajo del botón checkout
-  let locEl = document.getElementById('locationInfo');
-  if (!locEl) {
-    locEl = document.createElement('div');
-    locEl.id = 'locationInfo';
-    locEl.className = 'location-info';
-    footerEl.appendChild(locEl);
-  }
-
-  if (userLocation) {
-    locEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> Tu ubicación será enviada con el pedido`;
-  } else {
-    locEl.innerHTML = `<i class="fas fa-map-marker-alt"></i> Activa tu GPS para enviar tu ubicación`;
-  }
 }
 
-// ─── CARRITO: CONTADOR ───────────────────────
-function updateCartCount() {
-  const count = cart.reduce((sum, i) => sum + i.qty, 0);
-  const el    = document.getElementById('cartCount');
-
-  el.textContent = count;
-  el.classList.toggle('hidden', count === 0);
+// ─── BADGE DEL CARRITO ────────────────────────
+function updateCartBadge() {
+  const total = cart.reduce((sum, i) => sum + i.qty, 0);
+  const badge = document.getElementById('cartCount');
+  badge.textContent = total;
+  badge.style.display = total > 0 ? 'flex' : 'none';
 }
 
-// ─── ABRIR / CERRAR CARRITO ──────────────────
+// ─── ABRIR / CERRAR SIDEBAR ──────────────────
 function openCart() {
   document.getElementById('cartSidebar').classList.add('open');
   document.getElementById('cartOverlay').classList.add('open');
@@ -178,154 +231,128 @@ function closeCart() {
   document.body.style.overflow = '';
 }
 
-document.getElementById('cartBtn').addEventListener('click', openCart);
-
-// Cerrar con tecla Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeCart();
-});
+// ─── GEOLOCALIZACIÓN ─────────────────────────
+function requestLocation() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      userLocation = {
+        lat: pos.coords.latitude.toFixed(6),
+        lng: pos.coords.longitude.toFixed(6),
+      };
+    },
+    err => console.warn('GPS no disponible:', err.message),
+    { timeout: 10000, maximumAge: 60000 }
+  );
+}
 
 // ─── CHECKOUT POR WHATSAPP ───────────────────
-/**
- * Construye el mensaje de WhatsApp con:
- *  - Lista de productos con cantidades y subtotales
- *  - Total del pedido
- *  - Link de Google Maps si hay ubicación disponible
- */
 function checkout() {
   if (cart.length === 0) {
     showToast('⚠️ Tu carrito está vacío');
     return;
   }
 
-  const phoneNumber = '51920857471'; // Número con código de país Perú
-  const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const buildAndOpen = () => {
+    const phone = '51920857471';
+    const total = cart.reduce((sum, i) => {
+      const p = CATALOG[i.id];
+      return sum + (p ? p.price * i.qty : 0);
+    }, 0);
 
-  // Líneas de cada producto
-  const items = cart
-    .map(i => `${i.emoji} ${i.name} x${i.qty} = S/ ${(i.price * i.qty).toFixed(2)}`)
-    .join('\n');
+    const lines = cart.map(i => {
+      const p = CATALOG[i.id];
+      return p ? `${p.emoji} ${p.name} x${i.qty} = S/ ${(p.price * i.qty).toFixed(2)}` : '';
+    }).filter(Boolean).join('\n');
 
-  // Link de ubicación
-  let locationText = '📍 Ubicación: No compartida';
-  if (userLocation) {
-    const mapsUrl = `https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
-    locationText  = `📍 Mi ubicación: ${mapsUrl}`;
-  }
+    let locText = '📍 Ubicación: No compartida';
+    if (userLocation) {
+      locText = `📍 Ubicación: https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
+    }
 
-  // Mensaje completo
-  const message = [
-    '🌿 *PEDIDO - DELIVERY SELVA* 🌿',
-    '━━━━━━━━━━━━━━━━━━━━━',
-    items,
-    '━━━━━━━━━━━━━━━━━━━━━',
-    `💰 *TOTAL: S/ ${total.toFixed(2)}*`,
-    '',
-    locationText,
-    '',
-    '⏰ Por favor confirmar mi pedido. ¡Gracias! 😊',
-  ].join('\n');
+    const msg = [
+      '🌿 *PEDIDO - DELIVERY SELVA* 🌿',
+      '━━━━━━━━━━━━━━━━━━━━━',
+      lines,
+      '━━━━━━━━━━━━━━━━━━━━━',
+      `💰 *TOTAL: S/ ${total.toFixed(2)}*`,
+      '',
+      locText,
+      '',
+      '⏰ Por favor confirmar mi pedido. ¡Gracias! 😊',
+    ].join('\n');
 
-  const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
 
-  // Si el usuario aún no dio ubicación, pedirla antes de abrir WhatsApp
+  // Si no tenemos GPS, intentar una vez más antes de abrir
   if (!userLocation && navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        userLocation = {
-          lat: pos.coords.latitude.toFixed(6),
-          lng: pos.coords.longitude.toFixed(6),
-        };
-        // Reintentar ahora que tenemos la ubicación
-        checkout();
+      pos => {
+        userLocation = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+        buildAndOpen();
       },
-      () => {
-        // El usuario rechazó o falló — abrir WhatsApp sin ubicación
-        window.open(url, '_blank');
-      },
-      { timeout: 5000 }
+      () => buildAndOpen(),
+      { timeout: 4000 }
     );
-    return;
+  } else {
+    buildAndOpen();
   }
-
-  window.open(url, '_blank');
 }
 
 // ─── TABS DE CATEGORÍAS ──────────────────────
-/**
- * Maneja el desplazamiento suave entre secciones
- * y marca el tab activo al hacer scroll.
- */
 function initCategoryTabs() {
   const buttons  = document.querySelectorAll('.cat-btn');
   const sections = document.querySelectorAll('.product-section');
 
-  // Click en tab → scroll a la sección
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       const target = document.getElementById(btn.dataset.cat);
       if (!target) return;
-
-      const offset = 64 + 52; // header + cat-bar heights
+      const offset = 64 + 52;
       const top = target.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: 'smooth' });
-
       setActiveTab(btn);
     });
   });
 
-  // IntersectionObserver → actualiza tab activo al hacer scroll
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const activeBtn = document.querySelector(`.cat-btn[data-cat="${entry.target.id}"]`);
-          if (activeBtn) setActiveTab(activeBtn);
-        }
-      });
-    },
-    {
-      rootMargin: '-40% 0px -50% 0px', // activa cuando la sección está a la mitad de la pantalla
-      threshold: 0,
-    }
-  );
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const btn = document.querySelector(`.cat-btn[data-cat="${entry.target.id}"]`);
+        if (btn) setActiveTab(btn);
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
 
-  sections.forEach(section => observer.observe(section));
+  sections.forEach(s => observer.observe(s));
 }
 
 function setActiveTab(activeBtn) {
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
   activeBtn.classList.add('active');
-
-  // Desplazar el tab activo al centro de la barra horizontal
   activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 }
 
-// ─── TOAST NOTIFICATIONS ─────────────────────
-let toastTimeout;
-
+// ─── TOAST ───────────────────────────────────
+let toastTimer;
 function showToast(msg) {
-  let toast = document.getElementById('toastEl');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toastEl';
-    toast.className = 'toast';
-    document.body.appendChild(toast);
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
   }
-
-  toast.textContent = msg;
-  toast.classList.add('show');
-
-  clearTimeout(toastTimeout);
-  toastTimeout = setTimeout(() => toast.classList.remove('show'), 2200);
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
 }
 
-// ─── SCROLL: HEADER SHADOW ───────────────────
+// ─── SCROLL HEADER SHADOW ────────────────────
 window.addEventListener('scroll', () => {
-  const header = document.getElementById('header');
-  if (window.scrollY > 10) {
-    header.style.boxShadow = '0 2px 30px rgba(0,0,0,.4)';
-  } else {
-    header.style.boxShadow = '0 2px 20px rgba(0,0,0,.25)';
-  }
+  document.getElementById('header').style.boxShadow = window.scrollY > 10
+    ? '0 2px 30px rgba(0,0,0,.4)'
+    : '0 2px 20px rgba(0,0,0,.25)';
 }, { passive: true });
