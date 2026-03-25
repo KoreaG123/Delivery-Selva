@@ -599,28 +599,50 @@ function initCatNav() {
 
 /* ══════════════════════════════════════════
    PARALLAX VIDEO
+   - .hero-video-wrap mide 140% del hero
+     (top:-20%, bottom:-20%) como margen.
+   - Al hacer scroll lo movemos hacia arriba
+     0.35x la velocidad => efecto parallax.
+   - rAF garantiza 60fps sin jank.
 ══════════════════════════════════════════ */
 function initParallax() {
-  const hero = $q('.hero');
-  if (!hero || !heroVideoWrap) return;
+  const wrap = document.getElementById('heroVideoWrap');
+  const hero = document.querySelector('.hero');
+  if (!wrap || !hero) return;
 
-  let ticking = false;
+  // Respetar preferencia de movimiento reducido
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-  function onScroll() {
-    if (!ticking) {
-      requestAnimationFrame(() => {
-        const scrolled = window.scrollY;
-        const heroH    = hero.offsetHeight;
-        // move wrap up to 30% of scroll
-        const shift = Math.min(scrolled * 0.35, heroH * 0.3);
-        heroVideoWrap.style.transform = `translateY(${shift}px)`;
-        ticking = false;
-      });
-      ticking = true;
+  let ticking   = false;
+  let lastShift = -1;
+
+  function applyParallax() {
+    const scrollY = window.scrollY;
+    const heroH   = hero.offsetHeight;
+
+    // Solo mientras el hero sea visible
+    if (scrollY > heroH) { ticking = false; return; }
+
+    // factor 0.35 => 35% de la velocidad de scroll
+    // tope: 20% del heroH (= el margen extra del CSS)
+    const shift = Math.min(scrollY * 0.35, heroH * 0.20);
+
+    if (Math.abs(shift - lastShift) > 0.5) {
+      wrap.style.transform = 'translate3d(0,' + shift + 'px,0)';
+      lastShift = shift;
     }
+    ticking = false;
   }
 
-  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(applyParallax);
+      ticking = true;
+    }
+  }, { passive: true });
+
+  // Aplicar al cargar (por si hay scroll previo)
+  applyParallax();
 }
 
 /* ══════════════════════════════════════════
