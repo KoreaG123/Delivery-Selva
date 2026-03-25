@@ -256,7 +256,6 @@ const fabCount     = $('fabCount');
 const fabTotal     = $('fabTotal');
 const clearCartBtn = $('clearCartBtn');
 const sendOrderBtn = $('sendOrderBtn');
-const locBtn       = $('locBtn');
 const catsTrack    = $('catsTrack');
 const toast        = $('toast');
 const heroVideoWrap= $('heroVideoWrap');
@@ -364,17 +363,17 @@ function clearCart() {
   cart    = [];
   locData = null;
 
-  // Reset GPS button
-  const locBtnEl   = $('locBtn');
-  const locBtnText = $('locBtnText');
-  const locStatus  = $('locStatus');
-  if (locBtnEl)   { locBtnEl.classList.remove('loading','success'); }
-  if (locBtnText) { locBtnText.textContent = 'Usar mi ubicación GPS'; }
-  const icoEl = locBtnEl ? locBtnEl.querySelector('i') : null;
-  if (icoEl)      { icoEl.className = 'fas fa-satellite-dish'; }
-  if (locStatus)  { locStatus.className = 'loc-status'; locStatus.innerHTML = ''; }
+  // Reset GPS chip
+  const chip   = $('locBtn');
+  const icon   = $('locIcon');
+  const txt    = $('locBtnText');
+  const status = $('locStatus');
+  if (chip)   { chip.classList.remove('loading','success'); }
+  if (icon)   { icon.className = 'fas fa-satellite-dish'; }
+  if (txt)    { txt.textContent = 'Agregar ubicación GPS exacta'; }
+  if (status) { status.className = 'loc-status'; status.innerHTML = ''; }
 
-  // Reset address fields
+  // Reset dirección
   if ($('clientAddress')) $('clientAddress').value = '';
   if ($('clientRef'))     $('clientRef').value     = '';
 
@@ -419,8 +418,12 @@ function updateCartUI() {
 }
 
 function renderCartItems() {
+  const zone = $('cartItemsZone');
+  if (!zone) return;
+
   if (cart.length === 0) {
-    cartBody.innerHTML = `
+    // Mostrar vacío en la zona de items
+    zone.innerHTML = `
       <div class="cart-empty">
         <div class="empty-icon">🛍️</div>
         <strong>Tu carrito está vacío</strong>
@@ -429,13 +432,13 @@ function renderCartItems() {
     return;
   }
 
-  cartBody.innerHTML = cart.map(item => `
+  zone.innerHTML = cart.map(item => `
     <div class="cart-item" data-id="${item.id}">
       <img
         class="ci-img"
         src="${item.img}"
         alt="${item.name}"
-        onerror="this.src='';this.alt='${item.emoji}';this.style.fontSize='2rem';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center'"
+        onerror="this.style.display='none'"
       />
       <div class="ci-info">
         <div class="ci-name">${item.name}</div>
@@ -444,11 +447,11 @@ function renderCartItems() {
       </div>
       <div class="ci-controls">
         <div class="qty-row">
-          <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Disminuir cantidad">−</button>
+          <button class="qty-btn" data-action="dec" data-id="${item.id}">−</button>
           <span class="qty-val">${item.qty}</span>
-          <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar cantidad">+</button>
+          <button class="qty-btn" data-action="inc" data-id="${item.id}">+</button>
         </div>
-        <button class="remove-btn" data-action="remove" data-id="${item.id}" aria-label="Eliminar ${item.name}">
+        <button class="remove-btn" data-action="remove" data-id="${item.id}">
           <i class="fas fa-trash-can"></i> Quitar
         </button>
       </div>
@@ -472,80 +475,75 @@ function closeCart() {
 }
 
 /* ══════════════════════════════════════════
-   GEOLOCATION — flujo amigable
+   GEOLOCATION — lanza el GPS nativo del celular
+   al instante. Mensajes claros y cortos.
 ══════════════════════════════════════════ */
 function getLocation() {
-  const locStatus  = $('locStatus');
-  const locBtnText = $('locBtnText');
+  const chip   = $('locBtn');
+  const icon   = $('locIcon');
+  const txt    = $('locBtnText');
+  const status = $('locStatus');
+
+  if (!chip || !status) return;
 
   // Sin soporte
   if (!navigator.geolocation) {
-    showLocStatus('warn',
-      '<strong>GPS no disponible</strong>' +
-      'Tu navegador no soporta geolocalización. Escribe tu dirección abajo.');
+    setLocStatus(status, 'warn', '⚠️ Tu navegador no soporta GPS. Escribe tu dirección arriba.');
     return;
   }
 
-  // Estado: cargando
-  locBtn.classList.add('loading');
-  locBtnText.textContent = 'Detectando ubicación…';
-  locBtn.querySelector('i').className = 'fas fa-spinner fa-spin';
-  hideLocStatus();
+  // Estado: cargando — el navegador mostrará su propio popup de permiso
+  chip.classList.add('loading');
+  if (icon) icon.className = 'fas fa-spinner fa-spin';
+  if (txt)  txt.textContent = 'Activando GPS…';
+  status.className = 'loc-status'; status.textContent = '';
 
+  // getCurrentPosition dispara el popup nativo del navegador/celular
   navigator.geolocation.getCurrentPosition(
-    // ── ÉXITO ──
-    pos => {
-      const { latitude: lat, longitude: lng } = pos.coords;
-      const link = `https://www.google.com/maps?q=${lat},${lng}`;
-      locData = { lat, lng, link };
 
-      locBtn.classList.remove('loading');
-      locBtn.classList.add('success');
-      locBtn.querySelector('i').className = 'fas fa-circle-check';
-      locBtnText.textContent = '✓ Ubicación GPS obtenida';
+    // ✅ ÉXITO
+    function(pos) {
+      const lat  = pos.coords.latitude;
+      const lng  = pos.coords.longitude;
+      const link = 'https://www.google.com/maps?q=' + lat + ',' + lng;
+      locData    = { lat, lng, link };
 
-      showLocStatus('ok',
-        `📍 GPS activado — <a href="${link}" target="_blank">Ver en Google Maps</a>`);
+      chip.classList.remove('loading');
+      chip.classList.add('success');
+      if (icon) icon.className = 'fas fa-circle-check';
+      if (txt)  txt.textContent = 'GPS activo ✓';
+
+      setLocStatus(status, 'ok',
+        '📍 Ubicación obtenida — <a href="' + link + '" target="_blank">Ver en Maps</a>');
     },
 
-    // ── ERROR ──
-    err => {
-      locBtn.classList.remove('loading', 'success');
-      locBtn.querySelector('i').className = 'fas fa-satellite-dish';
-      locBtnText.textContent = 'Usar mi ubicación GPS';
+    // ❌ ERROR
+    function(err) {
+      chip.classList.remove('loading', 'success');
+      if (icon) icon.className = 'fas fa-satellite-dish';
+      if (txt)  txt.textContent = 'Agregar ubicación GPS exacta';
 
-      let html = '';
       if (err.code === 1) {
-        // Permiso denegado — el más común
-        html = `
-          <strong>📵 Permiso de GPS bloqueado</strong>
-          Para activarlo: abre los <b>ajustes de tu navegador</b> → Privacidad → Permisos de ubicación → actívalo para este sitio.<br>
-          <span style="opacity:.8">O simplemente escribe tu dirección en los campos de abajo.</span>`;
+        // Permiso denegado — mensaje claro con pasos
+        setLocStatus(status, 'warn',
+          '📵 Permiso bloqueado. Ve a Ajustes de tu celular → Apps → Navegador → Permisos → Activar Ubicación. O escribe tu dirección arriba.');
       } else if (err.code === 2) {
-        html = `
-          <strong>📡 GPS no disponible ahora</strong>
-          Activa el GPS de tu celular o escribe tu dirección en los campos de abajo.`;
+        setLocStatus(status, 'warn',
+          '📡 GPS no disponible. Activa el GPS de tu celular e intenta de nuevo.');
       } else {
-        html = `
-          <strong>⏱ Tardó demasiado</strong>
-          El GPS no respondió. Intenta de nuevo o escribe tu dirección abajo.`;
+        setLocStatus(status, 'warn',
+          '⏱ Tardó demasiado. Intenta de nuevo o escribe tu dirección arriba.');
       }
-      showLocStatus('warn', html);
     },
 
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    // Opciones: alta precisión, espera hasta 12s
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
   );
 }
 
-function showLocStatus(type, html) {
-  const el = $('locStatus');
-  el.innerHTML   = html;
-  el.className   = `loc-status ${type} visible`;
-}
-function hideLocStatus() {
-  const el = $('locStatus');
-  el.className = 'loc-status';
-  el.innerHTML = '';
+function setLocStatus(el, type, html) {
+  el.innerHTML  = html;
+  el.className  = 'loc-status ' + type + ' visible';
 }
 
 /* ══════════════════════════════════════════
@@ -729,12 +727,17 @@ function initCartEvents() {
   fabCart.addEventListener('click', openCart);
   cartClose.addEventListener('click', closeCart);
   cartBackdrop.addEventListener('click', closeCart);
-  clearCartBtn.addEventListener('click', clearCart);
-  sendOrderBtn.addEventListener('click', sendOrder);
-  locBtn.addEventListener('click', getLocation);
 
-  // Qty & remove delegate
-  cartBody.addEventListener('click', e => {
+  // Usar document para capturar botones que están dentro del scroll
+  document.addEventListener('click', e => {
+    // Vaciar carrito
+    if (e.target.closest('#clearCartBtn')) { clearCart(); return; }
+    // Enviar pedido
+    if (e.target.closest('#sendOrderBtn')) { sendOrder(); return; }
+    // GPS chip
+    if (e.target.closest('#locBtn')) { getLocation(); return; }
+
+    // Qty & remove
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const id = btn.dataset.id;
