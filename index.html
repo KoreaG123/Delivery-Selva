@@ -150,67 +150,68 @@
       <button class="cart-close" id="cartClose" aria-label="Cerrar carrito"><i class="fas fa-xmark"></i></button>
     </div>
 
+    <!-- Todo el contenido scrollea junto -->
     <div class="cart-body" id="cartBody">
-      <!-- populated by JS -->
-    </div>
 
-    <div class="cart-footer" id="cartFooter" style="display:none">
-      <div class="cart-total-row">
-        <span>Total</span>
-        <strong id="cartTotalDisplay">S/ 0.00</strong>
+      <!-- Zona de items — renderizada por JS -->
+      <div class="cart-items-zone" id="cartItemsZone">
+        <!-- items aquí -->
       </div>
 
-      <!-- Form -->
-      <div class="order-form">
-        <label class="form-label">Nombre <span class="req">*</span>
-          <input type="text" id="clientName" placeholder="Tu nombre completo" autocomplete="name" />
-        </label>
-        <label class="form-label">Teléfono
-          <input type="tel" id="clientPhone" placeholder="Opcional" autocomplete="tel" />
-        </label>
+      <!-- Footer dentro del scroll -->
+      <div class="cart-footer" id="cartFooter" style="display:none">
+        <div class="cart-total-row">
+          <span>Total</span>
+          <strong id="cartTotalDisplay">S/ 0.00</strong>
+        </div>
 
-        <!-- DIRECCIÓN -->
-        <div class="address-block">
-          <div class="address-block-title">
-            <i class="fas fa-map-marker-alt"></i> ¿Dónde te entregamos? <span class="req">*</span>
+        <!-- Form -->
+        <div class="order-form">
+          <label class="form-label">Nombre <span class="req">*</span>
+            <input type="text" id="clientName" placeholder="Tu nombre completo" autocomplete="name" />
+          </label>
+          <label class="form-label">Teléfono
+            <input type="tel" id="clientPhone" placeholder="Opcional" autocomplete="tel" />
+          </label>
+
+          <!-- DIRECCIÓN -->
+          <div class="address-block">
+            <div class="address-block-title">
+              <i class="fas fa-map-marker-alt"></i> Dirección de entrega <span class="req">*</span>
+            </div>
+            <label class="form-label">
+              <input
+                type="text"
+                id="clientAddress"
+                placeholder="Ej: Jr. Los Pinos 245, Moyobamba"
+                autocomplete="street-address"
+              />
+            </label>
+            <label class="form-label">
+              <input
+                type="text"
+                id="clientRef"
+                placeholder="Referencia: cerca al parque, frente a la farmacia…"
+              />
+            </label>
+            <!-- GPS como chip pequeño opcional -->
+            <button class="gps-chip" id="locBtn" type="button">
+              <i class="fas fa-satellite-dish" id="locIcon"></i>
+              <span id="locBtnText">Agregar ubicación GPS exacta</span>
+            </button>
+            <div class="loc-status" id="locStatus"></div>
           </div>
+        </div>
 
-          <!-- Opción 1: GPS -->
-          <button class="loc-btn" id="locBtn">
-            <i class="fas fa-satellite-dish"></i>
-            <span id="locBtnText">Usar mi ubicación GPS</span>
+        <div class="cart-actions">
+          <button class="btn-clear" id="clearCartBtn"><i class="fas fa-trash"></i> Vaciar carrito</button>
+          <button class="btn-order" id="sendOrderBtn">
+            <i class="fab fa-whatsapp"></i> Enviar pedido
           </button>
-          <div class="loc-status" id="locStatus"></div>
-
-          <!-- Separador -->
-          <div class="addr-divider"><span>ó escribe tu dirección</span></div>
-
-          <!-- Opción 2: Dirección escrita -->
-          <label class="form-label">
-            <input
-              type="text"
-              id="clientAddress"
-              placeholder="Ej: Jr. Los Pinos 245, Moyobamba"
-              autocomplete="street-address"
-            />
-          </label>
-          <label class="form-label" style="margin-top:6px">
-            <input
-              type="text"
-              id="clientRef"
-              placeholder="Referencia: cerca al parque, frente a la farmacia…"
-            />
-          </label>
         </div>
       </div>
 
-      <div class="cart-actions">
-        <button class="btn-clear" id="clearCartBtn"><i class="fas fa-trash"></i> Vaciar carrito</button>
-        <button class="btn-order" id="sendOrderBtn">
-          <i class="fab fa-whatsapp"></i> Enviar pedido
-        </button>
-      </div>
-    </div>
+    </div><!-- /cart-body -->
   </aside>
 
   <!-- ═══════════════════════ TOAST ═══════════════════════ -->
