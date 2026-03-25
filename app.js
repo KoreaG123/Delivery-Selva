@@ -1,358 +1,673 @@
-/* ============================================
+/* ═══════════════════════════════════════════
    DELIVERY SELVA — app.js
-   - Carrito con localStorage
-   - Controles inline en cada card (− N +)
-   - Borrar item individual ✕
-   - Vaciar todo el pedido
-   - WhatsApp checkout con geolocalización
-   ============================================ */
+   Lógica completa: catálogo, carrito,
+   ubicación, WhatsApp, parallax
+═══════════════════════════════════════════ */
 
-// ─── CATÁLOGO ────────────────────────────────
-// Datos de todos los productos para poder referenciarlos por id
-const CATALOG = {
-  '1':  { name: 'Guiso de Pollo',          price: 10, emoji: '🍛' },
-  '2':  { name: 'Mechado de Res',           price: 12, emoji: '🥩' },
-  '3':  { name: 'Arroz con Pollo',          price: 11, emoji: '🍚' },
-  '4':  { name: 'Chicharrón de Chancho',    price: 13, emoji: '🥓' },
-  '5':  { name: 'Pescado Frito',            price: 12, emoji: '🐟' },
-  '6':  { name: 'Tallarines Rojos',         price: 10, emoji: '🍝' },
-  '7':  { name: 'Cecina',                   price: 15, emoji: '🥩' },
-  '8':  { name: 'Tacacho con Cecina',       price: 18, emoji: '🍌' },
-  '9':  { name: 'Juane',                    price: 16, emoji: '🍃' },
-  '10': { name: 'Patarashca',               price: 20, emoji: '🐟' },
-  '11': { name: 'Ceviche',                  price: 18, emoji: '🍋' },
-  '12': { name: 'Arroz con Mariscos',       price: 22, emoji: '🦐' },
-  '13': { name: 'Jalea Mixta',              price: 25, emoji: '🐙' },
-  '14': { name: 'Chicharrón de Pescado',    price: 16, emoji: '🐠' },
-  '15': { name: 'Keke de Vainilla',         price:  6, emoji: '🍰' },
-  '16': { name: 'Torta de Chocolate',       price:  8, emoji: '🎂' },
-  '17': { name: 'Keke de Naranja',          price:  6, emoji: '🍊' },
-  '18': { name: 'Gelatina',                 price:  4, emoji: '🍮' },
-  '19': { name: 'Jugo de Papaya',           price:  5, emoji: '🥭' },
-  '20': { name: 'Jugo Surtido',             price:  5, emoji: '🍹' },
-  '21': { name: 'Jugo de Fresa con Leche',  price:  6, emoji: '🍓' },
-  '22': { name: 'Chicha Morada',            price:  5, emoji: '🫐' },
-};
+'use strict';
 
-// ─── ESTADO ──────────────────────────────────
-let cart = loadCartFromStorage();
-let userLocation = null;
+/* ══════════════════════════════════════════
+   CATÁLOGO DE PRODUCTOS
+══════════════════════════════════════════ */
+const CATALOG = [
+  /* ── Menú del día ── */
+  {
+    id: 'guiso-pollo',
+    cat: 'menu-hoy',
+    name: 'Guiso de pollo',
+    desc: 'Tierno guiso casero con papas y verduras de temporada',
+    price: 10,
+    img: 'img/guiso-de-pollo.jpg',
+    emoji: '🍗',
+    badge: 'popular'
+  },
+  {
+    id: 'mechado-res',
+    cat: 'menu-hoy',
+    name: 'Mechado de res',
+    desc: 'Carne de res deshebrada en salsa criolla',
+    price: 12,
+    img: 'img/mechado-de-res.jpg',
+    emoji: '🥩'
+  },
+  {
+    id: 'arroz-pollo',
+    cat: 'menu-hoy',
+    name: 'Arroz con pollo',
+    desc: 'Arroz verde aromático con pollo jugoso',
+    price: 11,
+    img: 'img/arroz-con-pollo.jpg',
+    emoji: '🍚',
+    badge: 'rec'
+  },
+  {
+    id: 'chicharron-chancho',
+    cat: 'menu-hoy',
+    name: 'Chicharrón de chancho',
+    desc: 'Crujiente chicharrón con mote y salsa criolla',
+    price: 12,
+    img: 'img/chicharron-de-chancho.jpg',
+    emoji: '🐷',
+    badge: 'popular'
+  },
+  {
+    id: 'pescado-frito',
+    cat: 'menu-hoy',
+    name: 'Pescado frito',
+    desc: 'Pescado fresco frito con arroz y ensalada',
+    price: 11,
+    img: 'img/pescado-frito.jpg',
+    emoji: '🐟'
+  },
+  {
+    id: 'tallarines-rojos',
+    cat: 'menu-hoy',
+    name: 'Tallarines rojos',
+    desc: 'Pasta en salsa de tomate con carne y queso',
+    price: 9,
+    img: 'img/tallarines-rojos.jpg',
+    emoji: '🍝'
+  },
 
-// ─── INIT ────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  renderCartSidebar();
-  updateCartBadge();
-  restoreAllCardControls();
-  initCategoryTabs();
-  requestLocation();
-  document.getElementById('cartBtn').addEventListener('click', openCart);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCart(); });
-});
+  /* ── Platos de la Selva ── */
+  {
+    id: 'cecina',
+    cat: 'selva',
+    name: 'Cecina',
+    desc: 'Carne de cerdo ahumada y condimentada, orgullo amazónico',
+    price: 13,
+    img: 'img/cecina.jpg',
+    emoji: '🥓',
+    badge: 'rec'
+  },
+  {
+    id: 'tacacho-cecina',
+    cat: 'selva',
+    name: 'Tacacho con cecina',
+    desc: 'Bolas de plátano verde asado con cecina ahumada',
+    price: 14,
+    img: 'img/tacacho-con-cecina.jpg',
+    emoji: '🌿',
+    badge: 'popular'
+  },
+  {
+    id: 'juane',
+    cat: 'selva',
+    name: 'Juane',
+    desc: 'Arroz con pollo envuelto en hoja de bijao. Clásico selvático',
+    price: 12,
+    img: 'img/juane.jpg',
+    emoji: '🌱',
+    badge: 'popular'
+  },
+  {
+    id: 'patarashca',
+    cat: 'selva',
+    name: 'Patarashca',
+    desc: 'Pescado de río cocinado en hoja de bijao con especias',
+    price: 14,
+    img: 'img/patarashca.jpg',
+    emoji: '🐠'
+  },
 
-// ─── LOCALSTORE ──────────────────────────────
-function loadCartFromStorage() {
-  try {
-    return JSON.parse(localStorage.getItem('ds_cart') || '[]');
-  } catch {
-    return [];
+  /* ── Platos Marinos ── */
+  {
+    id: 'ceviche',
+    cat: 'marinos',
+    name: 'Ceviche',
+    desc: 'Pescado fresco marinado en limón con cebolla y ají',
+    price: 16,
+    img: 'img/ceviche.jpg',
+    emoji: '🍋',
+    badge: 'popular'
+  },
+  {
+    id: 'arroz-mariscos',
+    cat: 'marinos',
+    name: 'Arroz con mariscos',
+    desc: 'Arroz cremoso con mix de mariscos y especias',
+    price: 18,
+    img: 'img/arroz-con-mariscos.jpg',
+    emoji: '🦐',
+    badge: 'rec'
+  },
+  {
+    id: 'jalea-mixta',
+    cat: 'marinos',
+    name: 'Jalea mixta',
+    desc: 'Mariscos y pescado apanados con yuca frita y salsa',
+    price: 17,
+    img: 'img/jalea-mixta.jpg',
+    emoji: '🦑'
+  },
+  {
+    id: 'chicharron-pescado',
+    cat: 'marinos',
+    name: 'Chicharrón de pescado',
+    desc: 'Trozos de pescado fritos y crujientes con limón',
+    price: 15,
+    img: 'img/chicharron-de-pescado.jpg',
+    emoji: '🐡'
+  },
+
+  /* ── Postres ── */
+  {
+    id: 'keke-vainilla',
+    cat: 'postres',
+    name: 'Keke de vainilla',
+    desc: 'Bizcocho esponjoso con aroma natural de vainilla',
+    price: 6,
+    img: 'img/keke-de-vainilla.jpg',
+    emoji: '🍰'
+  },
+  {
+    id: 'torta-chocolate',
+    cat: 'postres',
+    name: 'Torta de chocolate',
+    desc: 'Húmeda torta de chocolate con cobertura cremosa',
+    price: 7,
+    img: 'img/torta-de-chocolate.jpg',
+    emoji: '🎂',
+    badge: 'popular'
+  },
+  {
+    id: 'keke-naranja',
+    cat: 'postres',
+    name: 'Keke de naranja',
+    desc: 'Bizcocho cítrico y esponjoso con jugo de naranja natural',
+    price: 6,
+    img: 'img/keke-de-naranja.jpg',
+    emoji: '🍊'
+  },
+  {
+    id: 'gelatina',
+    cat: 'postres',
+    name: 'Gelatina',
+    desc: 'Fresca gelatina de frutas, el postre favorito de todos',
+    price: 4,
+    img: 'img/gelatina.jpg',
+    emoji: '🫙'
+  },
+
+  /* ── Bebidas ── */
+  {
+    id: 'jugo-papaya',
+    cat: 'bebidas',
+    name: 'Jugo de papaya',
+    desc: 'Natural y dulce, papaya seleccionada del día',
+    price: 5,
+    img: 'img/jugo-de-papaya.jpg',
+    emoji: '🍹'
+  },
+  {
+    id: 'jugo-surtido',
+    cat: 'bebidas',
+    name: 'Jugo surtido',
+    desc: 'Mix de frutas tropicales, refrescante y nutritivo',
+    price: 5,
+    img: 'img/jugo-surtido.jpg',
+    emoji: '🥤',
+    badge: 'rec'
+  },
+  {
+    id: 'jugo-fresa-leche',
+    cat: 'bebidas',
+    name: 'Jugo de fresa con leche',
+    desc: 'Batido cremoso de fresa con leche fresca',
+    price: 6,
+    img: 'img/jugo-de-fresa-con-leche.jpg',
+    emoji: '🍓',
+    badge: 'popular'
+  },
+  {
+    id: 'chicha-morada',
+    cat: 'bebidas',
+    name: 'Chicha morada',
+    desc: 'Bebida tradicional de maíz morado con canela y clavo',
+    price: 4,
+    img: 'img/chicha-morada.jpg',
+    emoji: '🫐'
   }
+];
+
+/* ══════════════════════════════════════════
+   ESTADO DEL CARRITO
+══════════════════════════════════════════ */
+let cart    = [];
+let locData = null; // { lat, lng, link }
+
+/* ══════════════════════════════════════════
+   DOM REFS
+══════════════════════════════════════════ */
+const $  = id => document.getElementById(id);
+const $q = s  => document.querySelector(s);
+
+const header       = $q('.header');
+const cartBtn      = $('cartBtn');
+const cartClose    = $('cartClose');
+const cartBackdrop = $('cartBackdrop');
+const cartDrawer   = $('cartDrawer');
+const cartCount    = $('cartCount');
+const cartBody     = $('cartBody');
+const cartFooter   = $('cartFooter');
+const cartTotal    = $('cartTotalDisplay');
+const fabCart      = $('fabCart');
+const fabCount     = $('fabCount');
+const fabTotal     = $('fabTotal');
+const clearCartBtn = $('clearCartBtn');
+const sendOrderBtn = $('sendOrderBtn');
+const locBtn       = $('locBtn');
+const locResult    = $('locResult');
+const catsTrack    = $('catsTrack');
+const toast        = $('toast');
+const heroVideoWrap= $('heroVideoWrap');
+
+/* ══════════════════════════════════════════
+   RENDER PRODUCTS
+══════════════════════════════════════════ */
+function renderProducts() {
+  const grids = {
+    'menu-hoy': $('grid-menu-hoy'),
+    'selva'   : $('grid-selva'),
+    'marinos' : $('grid-marinos'),
+    'postres' : $('grid-postres'),
+    'bebidas' : $('grid-bebidas')
+  };
+
+  CATALOG.forEach(p => {
+    const grid = grids[p.cat];
+    if (!grid) return;
+
+    const badgeHTML = p.badge
+      ? `<span class="badge badge-${p.badge === 'popular' ? 'popular' : p.badge === 'rec' ? 'rec' : 'new'}">
+           ${p.badge === 'popular' ? '🔥 Popular' : p.badge === 'rec' ? '⭐ Recomendado' : '✨ Nuevo'}
+         </span>`
+      : '';
+
+    const card = document.createElement('article');
+    card.className = 'product-card';
+    card.setAttribute('data-id', p.id);
+    card.innerHTML = `
+      <div class="card-img-wrap">
+        <img
+          src="${p.img}"
+          alt="${p.name}"
+          loading="lazy"
+          onerror="this.style.display='none';this.parentNode.querySelector('.img-placeholder').style.display='flex'"
+        />
+        <div class="img-placeholder" style="display:none">${p.emoji}</div>
+        ${badgeHTML}
+      </div>
+      <div class="card-body">
+        <h3 class="card-name">${p.name}</h3>
+        <p class="card-desc">${p.desc}</p>
+        <div class="card-footer">
+          <span class="card-price">S/ ${p.price.toFixed(2)}</span>
+          <button class="add-btn" data-id="${p.id}" aria-label="Agregar ${p.name} al carrito">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Delegate add-to-cart clicks on the whole menu
+  document.getElementById('menu').addEventListener('click', e => {
+    const btn = e.target.closest('.add-btn');
+    if (!btn) return;
+    addToCart(btn.dataset.id, btn);
+  });
 }
 
-function saveCartToStorage() {
-  localStorage.setItem('ds_cart', JSON.stringify(cart));
-}
-
-// ─── AGREGAR AL CARRITO ──────────────────────
-function addToCart(id) {
-  id = String(id);
-  const product = CATALOG[id];
+/* ══════════════════════════════════════════
+   CART LOGIC
+══════════════════════════════════════════ */
+function addToCart(id, btnEl) {
+  const product = CATALOG.find(p => p.id === id);
   if (!product) return;
 
   const existing = cart.find(i => i.id === id);
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ id, qty: 1 });
+    cart.push({ ...product, qty: 1 });
   }
 
-  saveCartToStorage();
-  renderCartSidebar();
-  updateCartBadge();
-  updateCardControl(id);
-  showToast(`${product.emoji} ${product.name} agregado`);
+  // Visual feedback on button
+  if (btnEl) {
+    btnEl.classList.add('added');
+    btnEl.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => {
+      btnEl.classList.remove('added');
+      btnEl.innerHTML = '<i class="fas fa-plus"></i>';
+    }, 1000);
+  }
+
+  updateCartUI();
+  showToast(`✅ ${product.name} agregado`, 'green');
 }
 
-// ─── CAMBIAR CANTIDAD (desde card o sidebar) ──
+function removeFromCart(id) {
+  cart = cart.filter(i => i.id !== id);
+  updateCartUI();
+}
+
 function changeQty(id, delta) {
-  id = String(id);
   const item = cart.find(i => i.id === id);
   if (!item) return;
-
   item.qty += delta;
-
-  if (item.qty <= 0) {
-    // Eliminar del carrito
-    cart = cart.filter(i => i.id !== id);
-  }
-
-  saveCartToStorage();
-  renderCartSidebar();
-  updateCartBadge();
-  updateCardControl(id);
+  if (item.qty <= 0) removeFromCart(id);
+  else updateCartUI();
 }
 
-// ─── ELIMINAR UN ITEM COMPLETO ────────────────
-function removeItem(id) {
-  id = String(id);
-  cart = cart.filter(i => i.id !== id);
-  saveCartToStorage();
-  renderCartSidebar();
-  updateCartBadge();
-  updateCardControl(id);
-  const product = CATALOG[id];
-  if (product) showToast(`${product.emoji} ${product.name} eliminado`);
-}
-
-// ─── VACIAR TODO ──────────────────────────────
 function clearCart() {
-  if (cart.length === 0) return;
   cart = [];
-  saveCartToStorage();
-  renderCartSidebar();
-  updateCartBadge();
-  // Restaurar todos los botones + en las cards
-  Object.keys(CATALOG).forEach(id => updateCardControl(id));
-  showToast('🗑️ Pedido vaciado');
+  locData = null;
+  locResult.textContent = '';
+  locResult.className = 'loc-result';
+  updateCartUI();
+  showToast('🗑️ Carrito vaciado');
 }
 
-// ─── CONTROL INLINE EN CARD ──────────────────
-/**
- * Actualiza el div#ctrl-{id} de la card correspondiente.
- * Si qty > 0 muestra − N +, si qty === 0 muestra botón +.
- */
-function updateCardControl(id) {
-  id = String(id);
-  const container = document.getElementById(`ctrl-${id}`);
-  if (!container) return;
+function getTotal() {
+  return cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+}
 
-  const item = cart.find(i => i.id === id);
-  const qty  = item ? item.qty : 0;
+function getTotalItems() {
+  return cart.reduce((sum, i) => sum + i.qty, 0);
+}
 
-  if (qty === 0) {
-    container.innerHTML = `<button class="add-btn" onclick="addToCart('${id}')"><i class="fas fa-plus"></i></button>`;
+function updateCartUI() {
+  const total = getTotal();
+  const count = getTotalItems();
+
+  // Header badge
+  cartCount.textContent = count;
+  cartCount.classList.add('bump');
+  setTimeout(() => cartCount.classList.remove('bump'), 300);
+
+  // FAB
+  if (count > 0) {
+    fabCart.style.display = 'flex';
+    fabCount.textContent  = count;
+    fabTotal.textContent  = `S/ ${total.toFixed(2)}`;
   } else {
-    container.innerHTML = `
-      <div class="qty-ctrl">
-        <button class="qc-btn" onclick="changeQty('${id}', -1)">−</button>
-        <span class="qc-num">${qty}</span>
-        <button class="qc-btn" onclick="changeQty('${id}', 1)">+</button>
-      </div>`;
+    fabCart.style.display = 'none';
   }
+
+  // Cart total
+  cartTotal.textContent = `S/ ${total.toFixed(2)}`;
+
+  // Show/hide footer
+  cartFooter.style.display = cart.length ? 'block' : 'none';
+
+  // Render items
+  renderCartItems();
 }
 
-// Al cargar página, restaura controles de items que ya estaban en localStorage
-function restoreAllCardControls() {
-  cart.forEach(item => updateCardControl(item.id));
-}
-
-// ─── RENDER SIDEBAR ───────────────────────────
-function renderCartSidebar() {
-  const itemsEl  = document.getElementById('cartItems');
-  const emptyEl  = document.getElementById('cartEmpty');
-  const footerEl = document.getElementById('cartFooter');
-  const totalEl  = document.getElementById('cartTotal');
-
+function renderCartItems() {
   if (cart.length === 0) {
-    // Mostrar estado vacío
-    itemsEl.innerHTML = '';
-    emptyEl.style.display = 'flex';
-    itemsEl.appendChild(emptyEl);
-    footerEl.style.display = 'none';
+    cartBody.innerHTML = `
+      <div class="cart-empty">
+        <div class="empty-icon">🛍️</div>
+        <strong>Tu carrito está vacío</strong>
+        <p>Agrega productos del menú para comenzar tu pedido.</p>
+      </div>`;
     return;
   }
 
-  // Calcular total
-  const total = cart.reduce((sum, i) => {
-    const p = CATALOG[i.id];
-    return sum + (p ? p.price * i.qty : 0);
-  }, 0);
-
-  totalEl.textContent = `S/ ${total.toFixed(2)}`;
-  emptyEl.style.display  = 'none';
-  footerEl.style.display = 'flex';
-
-  // Render items
-  itemsEl.innerHTML = '';
-
-  cart.forEach(item => {
-    const p = CATALOG[item.id];
-    if (!p) return;
-
-    const subtotal = (p.price * item.qty).toFixed(2);
-    const el = document.createElement('div');
-    el.className = 'cart-item';
-    el.innerHTML = `
-      <div class="cart-item-emoji">${p.emoji}</div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">${p.name}</div>
-        <div class="cart-item-price">S/ ${subtotal}</div>
+  cartBody.innerHTML = cart.map(item => `
+    <div class="cart-item" data-id="${item.id}">
+      <img
+        class="ci-img"
+        src="${item.img}"
+        alt="${item.name}"
+        onerror="this.src='';this.alt='${item.emoji}';this.style.fontSize='2rem';this.style.display='flex';this.style.alignItems='center';this.style.justifyContent='center'"
+      />
+      <div class="ci-info">
+        <div class="ci-name">${item.name}</div>
+        <div class="ci-price">S/ ${item.price.toFixed(2)} c/u</div>
+        <div class="ci-subtotal">S/ ${(item.price * item.qty).toFixed(2)}</div>
       </div>
-      <div class="cart-item-controls">
-        <button class="s-qty-btn" onclick="changeQty('${item.id}', -1)">−</button>
-        <span class="s-qty-num">${item.qty}</span>
-        <button class="s-qty-btn" onclick="changeQty('${item.id}', 1)">+</button>
-        <button class="delete-item-btn" onclick="removeItem('${item.id}')" title="Eliminar">
-          <i class="fas fa-trash-alt"></i>
+      <div class="ci-controls">
+        <div class="qty-row">
+          <button class="qty-btn" data-action="dec" data-id="${item.id}" aria-label="Disminuir cantidad">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" data-action="inc" data-id="${item.id}" aria-label="Aumentar cantidad">+</button>
+        </div>
+        <button class="remove-btn" data-action="remove" data-id="${item.id}" aria-label="Eliminar ${item.name}">
+          <i class="fas fa-trash-can"></i> Quitar
         </button>
       </div>
-    `;
-    itemsEl.appendChild(el);
-  });
+    </div>
+  `).join('');
 }
 
-// ─── BADGE DEL CARRITO ────────────────────────
-function updateCartBadge() {
-  const total = cart.reduce((sum, i) => sum + i.qty, 0);
-  const badge = document.getElementById('cartCount');
-  badge.textContent = total;
-  badge.style.display = total > 0 ? 'flex' : 'none';
-}
-
-// ─── ABRIR / CERRAR SIDEBAR ──────────────────
+/* ══════════════════════════════════════════
+   CART OPEN / CLOSE
+══════════════════════════════════════════ */
 function openCart() {
-  document.getElementById('cartSidebar').classList.add('open');
-  document.getElementById('cartOverlay').classList.add('open');
+  cartDrawer.classList.add('open');
+  cartBackdrop.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
 
 function closeCart() {
-  document.getElementById('cartSidebar').classList.remove('open');
-  document.getElementById('cartOverlay').classList.remove('open');
+  cartDrawer.classList.remove('open');
+  cartBackdrop.classList.remove('open');
   document.body.style.overflow = '';
 }
 
-// ─── GEOLOCALIZACIÓN ─────────────────────────
-function requestLocation() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      userLocation = {
-        lat: pos.coords.latitude.toFixed(6),
-        lng: pos.coords.longitude.toFixed(6),
-      };
-    },
-    err => console.warn('GPS no disponible:', err.message),
-    { timeout: 10000, maximumAge: 60000 }
-  );
-}
-
-// ─── CHECKOUT POR WHATSAPP ───────────────────
-function checkout() {
-  if (cart.length === 0) {
-    showToast('⚠️ Tu carrito está vacío');
+/* ══════════════════════════════════════════
+   GEOLOCATION
+══════════════════════════════════════════ */
+function getLocation() {
+  if (!navigator.geolocation) {
+    locResult.textContent = '❌ Tu navegador no soporta geolocalización.';
+    locResult.className   = 'loc-result error';
     return;
   }
 
-  const buildAndOpen = () => {
-    const phone = '51920857471';
-    const total = cart.reduce((sum, i) => {
-      const p = CATALOG[i.id];
-      return sum + (p ? p.price * i.qty : 0);
-    }, 0);
+  locBtn.innerHTML    = '<i class="fas fa-spinner fa-spin"></i> Obteniendo ubicación…';
+  locBtn.disabled     = true;
+  locResult.textContent = '';
+  locResult.className = 'loc-result';
 
-    const lines = cart.map(i => {
-      const p = CATALOG[i.id];
-      return p ? `${p.emoji} ${p.name} x${i.qty} = S/ ${(p.price * i.qty).toFixed(2)}` : '';
-    }).filter(Boolean).join('\n');
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      const link = `https://www.google.com/maps?q=${lat},${lng}`;
+      locData = { lat, lng, link };
 
-    let locText = '📍 Ubicación: No compartida';
-    if (userLocation) {
-      locText = `📍 Ubicación: https://maps.google.com/?q=${userLocation.lat},${userLocation.lng}`;
-    }
-
-    const msg = [
-      '🌿 *PEDIDO - DELIVERY SELVA* 🌿',
-      '━━━━━━━━━━━━━━━━━━━━━',
-      lines,
-      '━━━━━━━━━━━━━━━━━━━━━',
-      `💰 *TOTAL: S/ ${total.toFixed(2)}*`,
-      '',
-      locText,
-      '',
-      '⏰ Por favor confirmar mi pedido. ¡Gracias! 😊',
-    ].join('\n');
-
-    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-  };
-
-  // Si no tenemos GPS, intentar una vez más antes de abrir
-  if (!userLocation && navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        userLocation = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
-        buildAndOpen();
-      },
-      () => buildAndOpen(),
-      { timeout: 4000 }
-    );
-  } else {
-    buildAndOpen();
-  }
+      locBtn.innerHTML = '<i class="fas fa-circle-check"></i> Ubicación compartida ✓';
+      locBtn.disabled  = false;
+      locResult.innerHTML = `📍 <a href="${link}" target="_blank" style="color:var(--green);text-decoration:underline">Ver en Google Maps</a>`;
+    },
+    err => {
+      locBtn.innerHTML = '<i class="fas fa-location-dot"></i> Compartir mi ubicación';
+      locBtn.disabled  = false;
+      let msg = '❌ No se pudo obtener la ubicación.';
+      if (err.code === 1) msg = '❌ Permiso denegado. Activa la ubicación.';
+      if (err.code === 2) msg = '❌ Posición no disponible.';
+      locResult.textContent = msg;
+      locResult.className   = 'loc-result error';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
 }
 
-// ─── TABS DE CATEGORÍAS ──────────────────────
-function initCategoryTabs() {
-  const buttons  = document.querySelectorAll('.cat-btn');
-  const sections = document.querySelectorAll('.product-section');
+/* ══════════════════════════════════════════
+   SEND ORDER — WHATSAPP
+══════════════════════════════════════════ */
+function sendOrder() {
+  const name  = $('clientName').value.trim();
+  const phone = $('clientPhone').value.trim();
 
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = document.getElementById(btn.dataset.cat);
-      if (!target) return;
-      const offset = 64 + 52;
-      const top = target.getBoundingClientRect().top + window.scrollY - offset;
+  if (!name) {
+    $('clientName').focus();
+    showToast('⚠️ Ingresa tu nombre para continuar');
+    $('clientName').style.borderColor = 'var(--amber-dk)';
+    setTimeout(() => { $('clientName').style.borderColor = ''; }, 2000);
+    return;
+  }
+
+  if (cart.length === 0) {
+    showToast('🛍️ El carrito está vacío');
+    return;
+  }
+
+  const lines = cart.map(i =>
+    `• ${i.qty}x ${i.name} — S/ ${(i.price * i.qty).toFixed(2)}`
+  ).join('\n');
+
+  const total = getTotal();
+
+  let msg  = `🌿 *PEDIDO — DELIVERY SELVA* 🌿\n\n`;
+  msg += `👤 *Cliente:* ${name}\n`;
+  if (phone) msg += `📞 *Teléfono:* ${phone}\n`;
+  msg += `\n🛒 *Productos:*\n${lines}\n\n`;
+  msg += `💰 *Total: S/ ${total.toFixed(2)}*\n`;
+  if (locData) {
+    msg += `\n📍 *Ubicación:* ${locData.link}`;
+  } else {
+    msg += `\n📍 Ubicación: (no compartida)`;
+  }
+  msg += `\n\n¡Gracias por tu pedido! 🙏`;
+
+  const encoded = encodeURIComponent(msg);
+  window.open(`https://wa.me/51920857471?text=${encoded}`, '_blank');
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let toastTimeout;
+function showToast(msg, type) {
+  toast.textContent = msg;
+  toast.className   = `toast${type ? ' ' + type : ''} show`;
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => {
+    toast.classList.remove('show');
+  }, 2400);
+}
+
+/* ══════════════════════════════════════════
+   CATEGORY NAV PILLS — scroll spy
+══════════════════════════════════════════ */
+function initCatNav() {
+  const pills = document.querySelectorAll('.cat-pill');
+  const sections = {
+    'menu-hoy': $('section-menu-hoy'),
+    'selva'   : $('section-selva'),
+    'marinos' : $('section-marinos'),
+    'postres' : $('section-postres'),
+    'bebidas' : $('section-bebidas')
+  };
+
+  // Click → scroll to section
+  pills.forEach(pill => {
+    pill.addEventListener('click', () => {
+      const id  = pill.dataset.cat;
+      const sec = sections[id];
+      if (!sec) return;
+      const top = sec.getBoundingClientRect().top + window.scrollY - 120;
       window.scrollTo({ top, behavior: 'smooth' });
-      setActiveTab(btn);
     });
   });
 
+  // Scroll spy
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
-        const btn = document.querySelector(`.cat-btn[data-cat="${entry.target.id}"]`);
-        if (btn) setActiveTab(btn);
+        const id   = entry.target.id.replace('section-', '');
+        const pill = document.querySelector(`.cat-pill[data-cat="${id}"]`);
+        if (pill) {
+          pills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          // scroll pill into view inside horizontal track
+          pill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
       }
     });
-  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+  }, { rootMargin: '-120px 0px -50% 0px' });
 
-  sections.forEach(s => observer.observe(s));
+  Object.values(sections).forEach(sec => {
+    if (sec) observer.observe(sec);
+  });
 }
 
-function setActiveTab(activeBtn) {
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-  activeBtn.classList.add('active');
-  activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-}
+/* ══════════════════════════════════════════
+   PARALLAX VIDEO
+══════════════════════════════════════════ */
+function initParallax() {
+  const hero = $q('.hero');
+  if (!hero || !heroVideoWrap) return;
 
-// ─── TOAST ───────────────────────────────────
-let toastTimer;
-function showToast(msg) {
-  let el = document.getElementById('toast');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'toast';
-    el.className = 'toast';
-    document.body.appendChild(el);
+  let ticking = false;
+
+  function onScroll() {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        const scrolled = window.scrollY;
+        const heroH    = hero.offsetHeight;
+        // move wrap up to 30% of scroll
+        const shift = Math.min(scrolled * 0.35, heroH * 0.3);
+        heroVideoWrap.style.transform = `translateY(${shift}px)`;
+        ticking = false;
+      });
+      ticking = true;
+    }
   }
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+
+  window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-// ─── SCROLL HEADER SHADOW ────────────────────
-window.addEventListener('scroll', () => {
-  document.getElementById('header').style.boxShadow = window.scrollY > 10
-    ? '0 2px 30px rgba(0,0,0,.4)'
-    : '0 2px 20px rgba(0,0,0,.25)';
-}, { passive: true });
+/* ══════════════════════════════════════════
+   HEADER SCROLL SHADOW
+══════════════════════════════════════════ */
+function initHeaderScroll() {
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+  }, { passive: true });
+}
+
+/* ══════════════════════════════════════════
+   CART EVENTS
+══════════════════════════════════════════ */
+function initCartEvents() {
+  cartBtn.addEventListener('click', openCart);
+  fabCart.addEventListener('click', openCart);
+  cartClose.addEventListener('click', closeCart);
+  cartBackdrop.addEventListener('click', closeCart);
+  clearCartBtn.addEventListener('click', clearCart);
+  sendOrderBtn.addEventListener('click', sendOrder);
+  locBtn.addEventListener('click', getLocation);
+
+  // Qty & remove delegate
+  cartBody.addEventListener('click', e => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.action === 'inc')    changeQty(id, +1);
+    if (btn.dataset.action === 'dec')    changeQty(id, -1);
+    if (btn.dataset.action === 'remove') removeFromCart(id);
+  });
+
+  // Close on ESC
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeCart();
+  });
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderProducts();
+  updateCartUI();
+  initCatNav();
+  initParallax();
+  initHeaderScroll();
+  initCartEvents();
+});
