@@ -3,543 +3,200 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Delivery Selva - Comida a domicilio</title>
-  <meta name="description" content="Pide comida casera, selvática, marinos, postres y bebidas en Delivery Selva." />
-  <meta name="keywords" content="delivery selva, comida peruana, comida a domicilio, pedidos online, comida selvatica" />
-  <meta property="og:title" content="Delivery Selva - Comida a domicilio" />
-  <meta property="og:description" content="El sabor de la selva directo a tu puerta." />
+  <title>Delivery Selva - Delivery de comida</title>
+  <meta name="description" content="Pide comida casera, selvática, marinos, postres y bebidas" />
+  <meta name="keywords" content="delivery selva, comida peruana, delivery" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Delivery Selva - Delivery de comida" />
+  <meta property="og:description" content="Pide comida casera, selvática, marinos, postres y bebidas" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=630&fit=crop" />
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <!-- Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- HEADER -->
+  <!-- ═══════════════════════ HEADER ═══════════════════════ -->
   <header class="header" id="header">
     <div class="header-inner">
       <div class="logo">
-        <div class="logo-icon">🌿</div>
-        <div class="logo-text">
-          <span class="brand-name">Delivery Selva</span>
-          <span class="brand-tagline">Sabor amazónico</span>
-        </div>
+        <span class="logo-icon">🌿</span>
+        <span class="logo-text">Delivery <strong>Selva</strong></span>
       </div>
-      <button class="cart-btn" id="cartBtn" aria-label="Ver carrito">
-        <i class="fas fa-shopping-bag"></i>
-        <span class="cart-count" id="cartCount" style="display:none">0</span>
-      </button>
+      <div class="header-right">
+        <a href="https://wa.me/51920857471" class="header-wa" target="_blank" aria-label="WhatsApp">
+          <i class="fab fa-whatsapp"></i>
+        </a>
+        <button class="cart-btn" id="cartBtn" aria-label="Abrir carrito">
+          <i class="fas fa-bag-shopping"></i>
+          <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- HERO -->
-  <section class="hero">
+  <!-- ═══════════════════════ HERO ═══════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-video-wrap" id="heroVideoWrap">
+      <video
+        class="hero-video"
+        id="heroVideo"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="img/portada.jpg"
+      >
+        <source src="video/hero.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-overlay"></div>
+    </div>
     <div class="hero-content">
-      <p class="hero-eyebrow">🚀 Entrega rápida en tu zona</p>
-      <h1 class="hero-title">El sabor de la<br/><em>selva</em> a tu puerta</h1>
-      <p class="hero-sub">Comida fresca, casera y deliciosa. Pide ahora y recibe en minutos.</p>
+      <span class="hero-tag">🔥 Recién preparado hoy</span>
+      <h1 class="hero-title">Sabores de la<br /><em>Selva</em> en tu mesa</h1>
+      <p class="hero-subtitle">Comida casera, silvestre y marina — entregada donde estés.</p>
       <button class="hero-cta" onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'})">
         Ver menú <i class="fas fa-arrow-down"></i>
       </button>
     </div>
-    <div class="hero-visual">
-      <div class="hero-blob"></div>
-      <div class="hero-emojis">
-        <span class="float-emoji e1">🍛</span>
-        <span class="float-emoji e2">🌿</span>
-        <span class="float-emoji e3">🐟</span>
-        <span class="float-emoji e4">🥤</span>
-        <span class="float-emoji e5">🍰</span>
-      </div>
+    <div class="hero-scroll-hint">
+      <span></span>
     </div>
   </section>
 
-  <!-- CATEGORÍAS -->
-  <section class="categories-bar" id="menu">
-    <div class="categories-scroll">
-      <button class="cat-btn active" data-cat="menu-hoy">🍛 Menú del Día</button>
-      <button class="cat-btn" data-cat="selva">🌿 Platos de la Selva</button>
-      <button class="cat-btn" data-cat="marinos">🐟 Platos Marinos</button>
-      <button class="cat-btn" data-cat="postres">🍰 Postres</button>
-      <button class="cat-btn" data-cat="bebidas">🥤 Bebidas</button>
+  <!-- ═══════════════════════ CATEGORIES NAV ═══════════════════════ -->
+  <nav class="cats-nav" id="catsNav">
+    <div class="cats-track" id="catsTrack">
+      <button class="cat-pill active" data-cat="menu-hoy">🍛 Menú del día</button>
+      <button class="cat-pill" data-cat="selva">🌿 Platos de la Selva</button>
+      <button class="cat-pill" data-cat="marinos">🐟 Platos Marinos</button>
+      <button class="cat-pill" data-cat="postres">🍰 Postres</button>
+      <button class="cat-pill" data-cat="bebidas">🥤 Bebidas</button>
     </div>
-  </section>
+  </nav>
 
-  <!-- PRODUCTOS -->
-  <main class="products-wrapper">
+  <!-- ═══════════════════════ MENU ═══════════════════════ -->
+  <main class="menu-wrap" id="menu">
 
-    <!-- Menú del Día -->
-    <section class="product-section" id="menu-hoy">
-      <div class="section-header">
-        <h2>🍛 Menú del Día</h2>
-        <p>Preparado fresco cada mañana con ingredientes seleccionados</p>
+    <!-- Menú del día -->
+    <section class="cat-section" id="section-menu-hoy">
+      <div class="section-head">
+        <h2 class="section-title"><span>🍛</span> Preparación del Menú de Hoy</h2>
+        <p class="section-sub">Cocinado fresco cada mañana</p>
       </div>
-      <div class="products-grid">
-        <div class="product-card" data-id="1" data-name="Guiso de Pollo" data-price="10" data-emoji="🍛">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1598103442097-8b74394b95c3?w=400&h=300&fit=crop" alt="Guiso de Pollo" loading="lazy"/>
-            <span class="product-badge">Popular</span>
-          </div>
-          <div class="product-info">
-            <h3>Guiso de Pollo</h3>
-            <p>Pollo tierno en salsa criolla con papa y arroz blanco.</p>
-            <div class="product-footer">
-              <span class="price">S/ 10.00</span>
-              <div class="card-controls" id="ctrl-1">
-                <button class="add-btn" onclick="addToCart('1')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="2" data-name="Mechado de Res" data-price="12" data-emoji="🥩">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1544025162-d76694265947?w=400&h=300&fit=crop" alt="Mechado de Res" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Mechado de Res</h3>
-            <p>Carne de res deshilachada en aderezos especiales con menestras.</p>
-            <div class="product-footer">
-              <span class="price">S/ 12.00</span>
-              <div class="card-controls" id="ctrl-2">
-                <button class="add-btn" onclick="addToCart('2')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="3" data-name="Arroz con Pollo" data-price="11" data-emoji="🍚">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1512058564366-18510be2db19?w=400&h=300&fit=crop" alt="Arroz con Pollo" loading="lazy"/>
-            <span class="product-badge">⭐ Favorito</span>
-          </div>
-          <div class="product-info">
-            <h3>Arroz con Pollo</h3>
-            <p>Arroz verde con pollo jugoso y salsa criolla al lado.</p>
-            <div class="product-footer">
-              <span class="price">S/ 11.00</span>
-              <div class="card-controls" id="ctrl-3">
-                <button class="add-btn" onclick="addToCart('3')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="4" data-name="Chicharrón de Chancho" data-price="13" data-emoji="🥓">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1529059997568-3d847b1154f0?w=400&h=300&fit=crop" alt="Chicharrón de Chancho" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Chicharrón de Chancho</h3>
-            <p>Cerdo frito crocante con camote sancochado y salsa criolla.</p>
-            <div class="product-footer">
-              <span class="price">S/ 13.00</span>
-              <div class="card-controls" id="ctrl-4">
-                <button class="add-btn" onclick="addToCart('4')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="5" data-name="Pescado Frito" data-price="12" data-emoji="🐟">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=400&h=300&fit=crop" alt="Pescado Frito" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Pescado Frito</h3>
-            <p>Pescado fresco frito dorado, servido con yuca y ensalada.</p>
-            <div class="product-footer">
-              <span class="price">S/ 12.00</span>
-              <div class="card-controls" id="ctrl-5">
-                <button class="add-btn" onclick="addToCart('5')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="6" data-name="Tallarines Rojos" data-price="10" data-emoji="🍝">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&h=300&fit=crop" alt="Tallarines Rojos" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Tallarines Rojos</h3>
-            <p>Pasta en salsa de tomate casera con carne molida y queso.</p>
-            <div class="product-footer">
-              <span class="price">S/ 10.00</span>
-              <div class="card-controls" id="ctrl-6">
-                <button class="add-btn" onclick="addToCart('6')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="products-grid" id="grid-menu-hoy"></div>
     </section>
 
     <!-- Platos de la Selva -->
-    <section class="product-section" id="selva">
-      <div class="section-header">
-        <h2>🌿 Platos de la Selva</h2>
-        <p>Recetas tradicionales amazónicas preparadas con amor</p>
+    <section class="cat-section" id="section-selva">
+      <div class="section-head">
+        <h2 class="section-title"><span>🌿</span> Platos de la Selva</h2>
+        <p class="section-sub">Recetas tradicionales amazónicas</p>
       </div>
-      <div class="products-grid">
-        <div class="product-card" data-id="7" data-name="Cecina" data-price="15" data-emoji="🥩">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=400&h=300&fit=crop" alt="Cecina" loading="lazy"/>
-            <span class="product-badge selva-badge">🌿 Selva</span>
-          </div>
-          <div class="product-info">
-            <h3>Cecina</h3>
-            <p>Carne de cerdo ahumada tradicional de la selva peruana.</p>
-            <div class="product-footer">
-              <span class="price">S/ 15.00</span>
-              <div class="card-controls" id="ctrl-7">
-                <button class="add-btn" onclick="addToCart('7')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="8" data-name="Tacacho con Cecina" data-price="18" data-emoji="🍌">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop" alt="Tacacho con Cecina" loading="lazy"/>
-            <span class="product-badge selva-badge">⭐ Especialidad</span>
-          </div>
-          <div class="product-info">
-            <h3>Tacacho con Cecina</h3>
-            <p>Bolitas de plátano verde frito con cecina ahumada y chorizo.</p>
-            <div class="product-footer">
-              <span class="price">S/ 18.00</span>
-              <div class="card-controls" id="ctrl-8">
-                <button class="add-btn" onclick="addToCart('8')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="9" data-name="Juane" data-price="16" data-emoji="🍃">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1574484284002-952d92456975?w=400&h=300&fit=crop" alt="Juane" loading="lazy"/>
-            <span class="product-badge selva-badge">🌿 Selva</span>
-          </div>
-          <div class="product-info">
-            <h3>Juane</h3>
-            <p>Arroz con pollo y especias envuelto en hoja de bijao al vapor.</p>
-            <div class="product-footer">
-              <span class="price">S/ 16.00</span>
-              <div class="card-controls" id="ctrl-9">
-                <button class="add-btn" onclick="addToCart('9')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="10" data-name="Patarashca" data-price="20" data-emoji="🐟">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=400&h=300&fit=crop" alt="Patarashca" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Patarashca</h3>
-            <p>Pescado de río asado en hoja de bijao con ajo y limón.</p>
-            <div class="product-footer">
-              <span class="price">S/ 20.00</span>
-              <div class="card-controls" id="ctrl-10">
-                <button class="add-btn" onclick="addToCart('10')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="products-grid" id="grid-selva"></div>
     </section>
 
     <!-- Platos Marinos -->
-    <section class="product-section" id="marinos">
-      <div class="section-header">
-        <h2>🐟 Platos Marinos</h2>
-        <p>Frescos del mar, llegados cada día para ti</p>
+    <section class="cat-section" id="section-marinos">
+      <div class="section-head">
+        <h2 class="section-title"><span>🐟</span> Platos Marinos</h2>
+        <p class="section-sub">Del mar a tu puerta</p>
       </div>
-      <div class="products-grid">
-        <div class="product-card" data-id="11" data-name="Ceviche" data-price="18" data-emoji="🍋">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1535473895227-bdecb20fb157?w=400&h=300&fit=crop" alt="Ceviche" loading="lazy"/>
-            <span class="product-badge">⭐ N°1</span>
-          </div>
-          <div class="product-info">
-            <h3>Ceviche</h3>
-            <p>Pescado fresco en leche de tigre con ají limo y cebolla morada.</p>
-            <div class="product-footer">
-              <span class="price">S/ 18.00</span>
-              <div class="card-controls" id="ctrl-11">
-                <button class="add-btn" onclick="addToCart('11')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="12" data-name="Arroz con Mariscos" data-price="22" data-emoji="🦐">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1559847844-5315695dadae?w=400&h=300&fit=crop" alt="Arroz con Mariscos" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Arroz con Mariscos</h3>
-            <p>Arroz jugoso con camarones, conchas y pulpo en salsa marina.</p>
-            <div class="product-footer">
-              <span class="price">S/ 22.00</span>
-              <div class="card-controls" id="ctrl-12">
-                <button class="add-btn" onclick="addToCart('12')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="13" data-name="Jalea Mixta" data-price="25" data-emoji="🐙">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&h=300&fit=crop" alt="Jalea Mixta" loading="lazy"/>
-            <span class="product-badge">🔥 Especial</span>
-          </div>
-          <div class="product-info">
-            <h3>Jalea Mixta</h3>
-            <p>Mariscos y pescado rebozados y fritos con yuca y salsa criolla.</p>
-            <div class="product-footer">
-              <span class="price">S/ 25.00</span>
-              <div class="card-controls" id="ctrl-13">
-                <button class="add-btn" onclick="addToCart('13')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="14" data-name="Chicharrón de Pescado" data-price="16" data-emoji="🐠">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=300&fit=crop" alt="Chicharrón de Pescado" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Chicharrón de Pescado</h3>
-            <p>Trozos de pescado crocantes con limón y ají amarillo.</p>
-            <div class="product-footer">
-              <span class="price">S/ 16.00</span>
-              <div class="card-controls" id="ctrl-14">
-                <button class="add-btn" onclick="addToCart('14')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="products-grid" id="grid-marinos"></div>
     </section>
 
     <!-- Postres -->
-    <section class="product-section" id="postres">
-      <div class="section-header">
-        <h2>🍰 Postres</h2>
-        <p>El dulce final perfecto para tu pedido</p>
+    <section class="cat-section" id="section-postres">
+      <div class="section-head">
+        <h2 class="section-title"><span>🍰</span> Postres</h2>
+        <p class="section-sub">El dulce cierre perfecto</p>
       </div>
-      <div class="products-grid">
-        <div class="product-card" data-id="15" data-name="Keke de Vainilla" data-price="6" data-emoji="🍰">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop" alt="Keke de Vainilla" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Keke de Vainilla</h3>
-            <p>Bizcocho esponjoso de vainilla con glaseado suave y cremoso.</p>
-            <div class="product-footer">
-              <span class="price">S/ 6.00</span>
-              <div class="card-controls" id="ctrl-15">
-                <button class="add-btn" onclick="addToCart('15')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="16" data-name="Torta de Chocolate" data-price="8" data-emoji="🎂">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&h=300&fit=crop" alt="Torta de Chocolate" loading="lazy"/>
-            <span class="product-badge dulce-badge">🍫 Favorito</span>
-          </div>
-          <div class="product-info">
-            <h3>Torta de Chocolate</h3>
-            <p>Bizcocho húmedo de chocolate con cobertura de ganache oscuro.</p>
-            <div class="product-footer">
-              <span class="price">S/ 8.00</span>
-              <div class="card-controls" id="ctrl-16">
-                <button class="add-btn" onclick="addToCart('16')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="17" data-name="Keke de Naranja" data-price="6" data-emoji="🍊">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1587668178277-295251f900ce?w=400&h=300&fit=crop" alt="Keke de Naranja" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Keke de Naranja</h3>
-            <p>Bizcocho cítrico con ralladura de naranja fresca y glaseado.</p>
-            <div class="product-footer">
-              <span class="price">S/ 6.00</span>
-              <div class="card-controls" id="ctrl-17">
-                <button class="add-btn" onclick="addToCart('17')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="18" data-name="Gelatina" data-price="4" data-emoji="🍮">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1495147466023-ac5c588e2e94?w=400&h=300&fit=crop" alt="Gelatina" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Gelatina</h3>
-            <p>Gelatina de colores con frutas tropicales y crema chantilly.</p>
-            <div class="product-footer">
-              <span class="price">S/ 4.00</span>
-              <div class="card-controls" id="ctrl-18">
-                <button class="add-btn" onclick="addToCart('18')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="products-grid" id="grid-postres"></div>
     </section>
 
     <!-- Bebidas -->
-    <section class="product-section" id="bebidas">
-      <div class="section-header">
-        <h2>🥤 Bebidas</h2>
-        <p>Refrescantes y naturales, perfectas para acompañar tu pedido</p>
+    <section class="cat-section" id="section-bebidas">
+      <div class="section-head">
+        <h2 class="section-title"><span>🥤</span> Bebidas</h2>
+        <p class="section-sub">Frescas y naturales</p>
       </div>
-      <div class="products-grid">
-        <div class="product-card" data-id="19" data-name="Jugo de Papaya" data-price="5" data-emoji="🥭">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400&h=300&fit=crop" alt="Jugo de Papaya" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Jugo de Papaya</h3>
-            <p>Jugo natural de papaya fresca, sin azúcar añadida.</p>
-            <div class="product-footer">
-              <span class="price">S/ 5.00</span>
-              <div class="card-controls" id="ctrl-19">
-                <button class="add-btn" onclick="addToCart('19')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="20" data-name="Jugo Surtido" data-price="5" data-emoji="🍹">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1546171753-97d7676e4602?w=400&h=300&fit=crop" alt="Jugo Surtido" loading="lazy"/>
-            <span class="product-badge">🌺 Tropical</span>
-          </div>
-          <div class="product-info">
-            <h3>Jugo Surtido</h3>
-            <p>Mezcla de frutas tropicales de temporada, refrescante y nutritivo.</p>
-            <div class="product-footer">
-              <span class="price">S/ 5.00</span>
-              <div class="card-controls" id="ctrl-20">
-                <button class="add-btn" onclick="addToCart('20')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="21" data-name="Jugo de Fresa con Leche" data-price="6" data-emoji="🍓">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=400&h=300&fit=crop" alt="Jugo de Fresa con Leche" loading="lazy"/>
-          </div>
-          <div class="product-info">
-            <h3>Jugo de Fresa con Leche</h3>
-            <p>Fresa fresca licuada con leche entera. Cremoso y delicioso.</p>
-            <div class="product-footer">
-              <span class="price">S/ 6.00</span>
-              <div class="card-controls" id="ctrl-21">
-                <button class="add-btn" onclick="addToCart('21')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="product-card" data-id="22" data-name="Chicha Morada" data-price="5" data-emoji="🫐">
-          <div class="product-img">
-            <img src="https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop" alt="Chicha Morada" loading="lazy"/>
-            <span class="product-badge">🇵🇪 Tradicional</span>
-          </div>
-          <div class="product-info">
-            <h3>Chicha Morada</h3>
-            <p>Bebida tradicional peruana de maíz morado con canela y clavo.</p>
-            <div class="product-footer">
-              <span class="price">S/ 5.00</span>
-              <div class="card-controls" id="ctrl-22">
-                <button class="add-btn" onclick="addToCart('22')"><i class="fas fa-plus"></i></button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="products-grid" id="grid-bebidas"></div>
     </section>
 
   </main>
 
-  <!-- WHATSAPP FLOTANTE -->
-  <a class="whatsapp-float" href="https://wa.me/51920857471" target="_blank" aria-label="WhatsApp">
-    <i class="fab fa-whatsapp"></i>
-  </a>
+  <!-- ═══════════════════════ FLOATING CART BTN ═══════════════════════ -->
+  <button class="fab-cart" id="fabCart" aria-label="Abrir carrito" style="display:none">
+    <i class="fas fa-bag-shopping"></i>
+    <span class="fab-count" id="fabCount">0</span>
+    <span class="fab-total" id="fabTotal">S/ 0.00</span>
+  </button>
 
-  <!-- CARRITO SIDEBAR -->
-  <div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
-  <aside class="cart-sidebar" id="cartSidebar">
-
+  <!-- ═══════════════════════ CART DRAWER ═══════════════════════ -->
+  <div class="cart-backdrop" id="cartBackdrop"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Carrito de compras">
     <div class="cart-header">
-      <h3><i class="fas fa-shopping-bag"></i> Tu Pedido</h3>
-      <button class="close-cart" onclick="closeCart()"><i class="fas fa-times"></i></button>
+      <h2><i class="fas fa-bag-shopping"></i> Tu pedido</h2>
+      <button class="cart-close" id="cartClose" aria-label="Cerrar carrito"><i class="fas fa-xmark"></i></button>
     </div>
 
-    <!-- Lista de items -->
-    <div class="cart-items" id="cartItems">
-      <div class="cart-empty" id="cartEmpty">
-        <div class="empty-icon">🛒</div>
-        <p>Tu carrito está vacío</p>
-        <span>¡Agrega algo delicioso!</span>
-      </div>
+    <div class="cart-body" id="cartBody">
+      <!-- populated by JS -->
     </div>
 
-    <!-- Footer del carrito -->
     <div class="cart-footer" id="cartFooter" style="display:none">
       <div class="cart-total-row">
         <span>Total</span>
-        <strong id="cartTotal">S/ 0.00</strong>
+        <strong id="cartTotalDisplay">S/ 0.00</strong>
       </div>
-      <button class="clear-all-btn" onclick="clearCart()">
-        <i class="fas fa-trash-alt"></i> Vaciar todo el pedido
-      </button>
-      <button class="checkout-btn" onclick="checkout()">
-        <i class="fab fa-whatsapp"></i> Pedir por WhatsApp
-      </button>
-    </div>
 
+      <!-- Form -->
+      <div class="order-form">
+        <label class="form-label">Nombre <span class="req">*</span>
+          <input type="text" id="clientName" placeholder="Tu nombre completo" autocomplete="name" />
+        </label>
+        <label class="form-label">Teléfono
+          <input type="tel" id="clientPhone" placeholder="Opcional" autocomplete="tel" />
+        </label>
+        <button class="loc-btn" id="locBtn">
+          <i class="fas fa-location-dot"></i> Compartir mi ubicación
+        </button>
+        <div class="loc-result" id="locResult"></div>
+      </div>
+
+      <div class="cart-actions">
+        <button class="btn-clear" id="clearCartBtn"><i class="fas fa-trash"></i> Vaciar carrito</button>
+        <button class="btn-order" id="sendOrderBtn">
+          <i class="fab fa-whatsapp"></i> Enviar pedido
+        </button>
+      </div>
+    </div>
   </aside>
 
-  <!-- FOOTER -->
+  <!-- ═══════════════════════ TOAST ═══════════════════════ -->
+  <div class="toast" id="toast"></div>
+
+  <!-- ═══════════════════════ FOOTER ═══════════════════════ -->
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <div class="footer-logo">🌿 Delivery Selva</div>
-        <p>El sabor amazónico directo a tu mesa. Rápido, fresco y delicioso.</p>
-        <a class="footer-wa" href="https://wa.me/51920857471" target="_blank">
-          <i class="fab fa-whatsapp"></i> 920 857 471
-        </a>
+        <span class="logo-icon">🌿</span>
+        <span>Delivery <strong>Selva</strong></span>
       </div>
+      <p class="footer-tagline">Sabores amazónicos a domicilio</p>
       <div class="footer-social">
-        <p>Síguenos</p>
-        <div class="social-links">
-          <a href="#" class="social-link facebook"><i class="fab fa-facebook-f"></i></a>
-          <a href="#" class="social-link instagram"><i class="fab fa-instagram"></i></a>
-          <a href="#" class="social-link tiktok"><i class="fab fa-tiktok"></i></a>
-        </div>
+        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+        <a href="https://wa.me/51920857471" aria-label="WhatsApp" target="_blank"><i class="fab fa-whatsapp"></i></a>
       </div>
-    </div>
-    <div class="footer-bottom">
-      <p>© 2025 Delivery Selva. Todos los derechos reservados.</p>
+      <p class="footer-wa">📲 920 857 471</p>
+      <p class="footer-copy">© 2024 Delivery Selva. Todos los derechos reservados.</p>
     </div>
   </footer>
 
