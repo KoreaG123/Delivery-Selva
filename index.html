@@ -10,6 +10,11 @@
   <meta property="og:title" content="Delivery Selva - Delivery de comida" />
   <meta property="og:description" content="Pide comida casera, selvática, marinos, postres y bebidas" />
   <meta property="og:type" content="website" />
+  <meta property="og:image" content="img/portada.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="img/portada.jpg" />
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -163,10 +168,40 @@
         <label class="form-label">Teléfono
           <input type="tel" id="clientPhone" placeholder="Opcional" autocomplete="tel" />
         </label>
-        <button class="loc-btn" id="locBtn">
-          <i class="fas fa-location-dot"></i> Compartir mi ubicación
-        </button>
-        <div class="loc-result" id="locResult"></div>
+
+        <!-- DIRECCIÓN -->
+        <div class="address-block">
+          <div class="address-block-title">
+            <i class="fas fa-map-marker-alt"></i> ¿Dónde te entregamos? <span class="req">*</span>
+          </div>
+
+          <!-- Opción 1: GPS -->
+          <button class="loc-btn" id="locBtn">
+            <i class="fas fa-satellite-dish"></i>
+            <span id="locBtnText">Usar mi ubicación GPS</span>
+          </button>
+          <div class="loc-status" id="locStatus"></div>
+
+          <!-- Separador -->
+          <div class="addr-divider"><span>ó escribe tu dirección</span></div>
+
+          <!-- Opción 2: Dirección escrita -->
+          <label class="form-label">
+            <input
+              type="text"
+              id="clientAddress"
+              placeholder="Ej: Jr. Los Pinos 245, Moyobamba"
+              autocomplete="street-address"
+            />
+          </label>
+          <label class="form-label" style="margin-top:6px">
+            <input
+              type="text"
+              id="clientRef"
+              placeholder="Referencia: cerca al parque, frente a la farmacia…"
+            />
+          </label>
+        </div>
       </div>
 
       <div class="cart-actions">
