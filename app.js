@@ -524,15 +524,11 @@ function getLocation() {
       if (txt)  txt.textContent = 'Agregar ubicación GPS exacta';
 
       if (err.code === 1) {
-        // Permiso denegado — mensaje claro con pasos
-        setLocStatus(status, 'warn',
-          '📵 Permiso bloqueado. Ve a Ajustes de tu celular → Apps → Navegador → Permisos → Activar Ubicación. O escribe tu dirección arriba.');
+        setLocStatus(status, 'warn', '📵 Activa el GPS de tu celular e intenta de nuevo.');
       } else if (err.code === 2) {
-        setLocStatus(status, 'warn',
-          '📡 GPS no disponible. Activa el GPS de tu celular e intenta de nuevo.');
+        setLocStatus(status, 'warn', '📡 GPS no encontrado. Activa tu GPS e intenta de nuevo.');
       } else {
-        setLocStatus(status, 'warn',
-          '⏱ Tardó demasiado. Intenta de nuevo o escribe tu dirección arriba.');
+        setLocStatus(status, 'warn', '⏱ No respondió. Intenta de nuevo.');
       }
     },
 
